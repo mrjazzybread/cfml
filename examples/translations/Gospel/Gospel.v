@@ -77,5 +77,8 @@ Definition init {A} (n : int) (f : int -> A) : list A :=
   if n <=? 0 then arbitrary else
     init_nat (Z.to_nat n) f.
 
-Definition bool_of_prop (P : Prop) : bool :=
+Definition prop_to_bool (P : Prop) : bool :=
   if classicT P then true else false.
+
+Definition bool_to_prop (b : bool) : Prop :=
+  b = true.

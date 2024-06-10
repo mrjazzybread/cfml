@@ -267,9 +267,9 @@ Qed.
 Definition snoc  (A : Type) (s : sequence A) (x : A) : sequence A:=
 app s (singleton x).
 
-Definition hd  (A : Type) {Ih : Inhab A} (s : sequence A) : A:= seq_get s (0)%Z.
+Definition hd (A : Type) {Ih : Inhab A} (s : sequence A) : A:= seq_get s (0)%Z.
 
-Definition tl  (A : Type) (s : sequence A) : sequence A:=
+Definition tl (A : Type) (s : sequence A) : sequence A:=
 seq_sub_l s (1)%Z.
 
 Definition append  (A : Type) (s1 : sequence A) (s2 : sequence A) : sequence A:=
