@@ -12,37 +12,39 @@ Require Import Coq.ZArith.BinIntDef CFML.Semantics CFML.WPHeader.
 
 Delimit Scope Z_scope with Z.
 
+Module Type Stdlib.
+
 Parameter sequence : Type -> Type.
 
 Parameter Sequence :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  sequence A ->
-  sequence A -> CFML.SepBase.SepBasicSetup.SepSimplArgsCredits.hprop.
+  forall a : Type,
+  forall {aIh : Inhab a},
+  sequence a ->
+  sequence a -> CFML.SepBase.SepBasicSetup.SepSimplArgsCredits.hprop.
 
 Parameter bag : Type -> Type.
 
 Parameter Bag :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  bag A -> bag A -> CFML.SepBase.SepBasicSetup.SepSimplArgsCredits.hprop.
+  forall a : Type,
+  forall {aIh : Inhab a},
+  bag a -> bag a -> CFML.SepBase.SepBasicSetup.SepSimplArgsCredits.hprop.
 
 Parameter set : Type -> Type.
 
 Parameter _Set :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  set A -> set A -> CFML.SepBase.SepBasicSetup.SepSimplArgsCredits.hprop.
+  forall a : Type,
+  forall {aIh : Inhab a},
+  set a -> set a -> CFML.SepBase.SepBasicSetup.SepSimplArgsCredits.hprop.
 
 Parameter map : Type -> Type -> Type.
 
 Parameter Map :
-  forall A : Type,
-  forall B : Type,
-  forall AIh : Inhab Type,
-  forall BIh : Inhab Type,
-  map A B ->
-  map A B -> CFML.SepBase.SepBasicSetup.SepSimplArgsCredits.hprop.
+  forall a : Type,
+  forall b : Type,
+  forall {aIh : Inhab a},
+  forall {bIh : Inhab b},
+  map a b ->
+  map a b -> CFML.SepBase.SepBasicSetup.SepSimplArgsCredits.hprop.
 
 Parameter succ : Coq.Numbers.BinNums.Z -> Coq.Numbers.BinNums.Z.
 
@@ -50,7 +52,7 @@ Parameter pred : Coq.Numbers.BinNums.Z -> Coq.Numbers.BinNums.Z.
 
 Parameter neg : Coq.Numbers.BinNums.Z -> Coq.Numbers.BinNums.Z.
 
-Parameter add :
+Parameter plus :
   Coq.Numbers.BinNums.Z -> Coq.Numbers.BinNums.Z -> Coq.Numbers.BinNums.Z.
 
 Parameter minus :
@@ -89,40 +91,19 @@ Parameter max_int : Coq.Numbers.BinNums.Z.
 Parameter min_int : Coq.Numbers.BinNums.Z.
 
 Parameter app :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  sequence A -> sequence A -> sequence A.
+  forall a : Type,
+  forall {aIh : Inhab a},
+  sequence a -> sequence a -> sequence a.
 
 Parameter seq_get :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  sequence A -> Coq.Numbers.BinNums.Z -> A.
+  forall a : Type,
+  forall {aIh : Inhab a},
+  sequence a -> Coq.Numbers.BinNums.Z -> a.
 
-Parameter length :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  sequence A -> Coq.Numbers.BinNums.Z.
-
-Parameter seq_sub :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  sequence A ->
-  Coq.Numbers.BinNums.Z -> Coq.Numbers.BinNums.Z -> sequence A.
-
-Definition seq_sub_l  (A : Type) (AIh : Inhab Type) (s : sequence A) (
-  i : Coq.Numbers.BinNums.Z
-) : sequence A:=
-seq_sub s i (length s).
-
-Definition seq_sub_r  (A : Type) (AIh : Inhab Type) (s : sequence A) (
-  i : Coq.Numbers.BinNums.Z
-) : sequence A:=
-seq_sub s (0)%Z i.
-
-Definition map_set  (A : Type) (B : Type) (AIh : Inhab Type) (
-  BIh : Inhab Type
-) (f : A -> B) (x : A) (y : B) : A -> B:=
-fun arg : A =>
+Definition map_set  (a : Type) (b : Type) { aIh : Inhab a } {
+  bIh : Inhab b
+} (f : a -> b) (x : a) (y : b) : a -> b:=
+fun arg : a =>
 if classicT (Coq.Init.Logic.eq arg x) then y else f x.
 
 Module Sequence.
@@ -130,48 +111,75 @@ Module Sequence.
 Parameter t : Type -> Type.
 
 Parameter T :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  t A -> t A -> CFML.SepBase.SepBasicSetup.SepSimplArgsCredits.hprop.
+  forall a : Type,
+  forall {aIh : Inhab a},
+  t a -> t a -> CFML.SepBase.SepBasicSetup.SepSimplArgsCredits.hprop.
 
-Definition in_range  (A : Type) (AIh : Inhab Type) (s : sequence A) (
+Parameter length :
+  forall a : Type,
+  forall {aIh : Inhab a},
+  sequence a -> Coq.Numbers.BinNums.Z.
+
+Parameter seq_sub :
+  forall a : Type,
+  forall {aIh : Inhab a},
+  sequence a ->
+  Coq.Numbers.BinNums.Z -> Coq.Numbers.BinNums.Z -> sequence a.
+
+Definition seq_sub_l  (a : Type) { aIh : Inhab a } (s : sequence a) (
+  i : Coq.Numbers.BinNums.Z
+) : sequence a:=
+seq_sub s i (length s).
+
+Definition seq_sub_r  (a : Type) { aIh : Inhab a } (s : sequence a) (
+  i : Coq.Numbers.BinNums.Z
+) : sequence a:=
+seq_sub s (0)%Z i.
+
+Definition in_range  (a : Type) { aIh : Inhab a } (s : sequence a) (
   i : Coq.Numbers.BinNums.Z
 ) : Prop:=
 Coq.Init.Logic.and (le (0)%Z i) (lt i (length s)).
 
-Definition length  (A : Type) (AIh : Inhab Type) (s : sequence A) : Coq.Numbers.BinNums.Z:=
-length s.
-
 Parameter length_nonneg :
-  forall A11 : Type,
-  forall s : sequence A11,
+  forall a10 : Type,
+  forall {a10Ih : Inhab a10},
+  forall s : sequence a10,
   le (0)%Z (length s).
 
 Parameter append_length :
-  forall A17 : Type,
-  forall s : sequence A17,
-  forall s' : sequence A17,
-  Coq.Init.Logic.eq (length (app s s')) (add (length s) (length s')).
+  forall a16 : Type,
+  forall {a16Ih : Inhab a16},
+  forall s : sequence a16,
+  forall s' : sequence a16,
+  Coq.Init.Logic.eq (length (app s s')) (plus (length s) (length s')).
 
 Parameter append_elems_left :
-  forall A26 : Type,
-  forall s : sequence A26,
-  forall s' : sequence A26,
+  forall a25 : Type,
+  forall {a25Ih : Inhab a25},
+  forall s : sequence a25,
+  forall s' : sequence a25,
   forall i : Coq.Numbers.BinNums.Z,
-  Coq.Init.Logic.and (le i (0)%Z) (lt (0)%Z (length s)) ->
+  Coq.Init.Logic.and (le (0)%Z i) (lt i (length s)) ->
   Coq.Init.Logic.eq (seq_get (app s s') i) (seq_get s i).
 
 Parameter append_elems_right :
-  forall A37 : Type,
-  forall s : sequence A37,
-  forall s' : sequence A37,
+  forall a36 : Type,
+  forall {a36Ih : Inhab a36},
+  forall s : sequence a36,
+  forall s' : sequence a36,
   forall i : Coq.Numbers.BinNums.Z,
-  Coq.Init.Logic.and (le (length s) i) (lt i (add (length s) (length s'))) ->
-  Coq.Init.Logic.eq (seq_get (app s s') (add i (length s))) (seq_get s' i).
+  Coq.Init.Logic.and (le (length s) i) (
+    lt i (plus (length s) (length s'))
+  ) ->
+  Coq.Init.Logic.eq (seq_get (app s s') i) (
+    seq_get s' (minus i (length s))
+  ).
 
 Parameter subseq :
-  forall A45 : Type,
-  forall s : sequence A45,
+  forall a44 : Type,
+  forall {a44Ih : Inhab a44},
+  forall s : sequence a44,
   forall i : Coq.Numbers.BinNums.Z,
   forall i1 : Coq.Numbers.BinNums.Z,
   forall i2 : Coq.Numbers.BinNums.Z,
@@ -179,193 +187,209 @@ Parameter subseq :
   Coq.Init.Logic.eq (seq_get s i) (seq_get (seq_sub s i1 i2) (minus i i1)).
 
 Parameter init :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  Coq.Numbers.BinNums.Z -> (Coq.Numbers.BinNums.Z -> A) -> sequence A.
+  forall a : Type,
+  forall {aIh : Inhab a},
+  Coq.Numbers.BinNums.Z -> (Coq.Numbers.BinNums.Z -> a) -> sequence a.
 
 Parameter init_length :
-  forall A49 : Type,
+  forall a48 : Type,
+  forall {a48Ih : Inhab a48},
   forall n : Coq.Numbers.BinNums.Z,
-  forall f : Coq.Numbers.BinNums.Z -> A49,
+  forall f : Coq.Numbers.BinNums.Z -> a48,
   ge n (0)%Z -> Coq.Init.Logic.eq (length (init n f)) n.
 
 Parameter init_elems :
-  forall A57 : Type,
+  forall a56 : Type,
+  forall {a56Ih : Inhab a56},
   forall n : Coq.Numbers.BinNums.Z,
-  forall f : Coq.Numbers.BinNums.Z -> A57,
+  forall f : Coq.Numbers.BinNums.Z -> a56,
   forall i : Coq.Numbers.BinNums.Z,
   Coq.Init.Logic.and (le (0)%Z i) (lt i n) ->
   Coq.Init.Logic.eq (seq_get (init n f) i) (f i).
 
-Parameter empty : forall A : Type, forall AIh : Inhab Type, sequence A.
+Parameter empty : forall a : Type, forall {aIh : Inhab a}, sequence a.
 
-Parameter empty_length : Coq.Init.Logic.eq (length empty) (0)%Z.
+Parameter empty_length :
+  forall a58 : Type,
+  forall {a58Ih : Inhab a58},
+  Coq.Init.Logic.eq (length (@empty a58 a58Ih)) (0)%Z.
 
-Definition singleton  (A : Type) (AIh : Inhab Type) (x : A) : sequence A:=
+Definition singleton  (a : Type) { aIh : Inhab a } (x : a) : sequence a:=
 init (1)%Z (fun _ : Coq.Numbers.BinNums.Z => x).
 
-Definition cons  (A : Type) (AIh : Inhab Type) (x : A) (s : sequence A) : sequence A:=
+Definition cons  (a : Type) { aIh : Inhab a } (x : a) (s : sequence a) : sequence a:=
 app (singleton x) s.
 
-Definition snoc  (A : Type) (AIh : Inhab Type) (s : sequence A) (x : A) : sequence A:=
+Definition snoc  (a : Type) { aIh : Inhab a } (s : sequence a) (x : a) : sequence a:=
 app s (singleton x).
 
-Definition hd  (A : Type) (AIh : Inhab Type) (s : sequence A) : A:=
+Definition hd  (a : Type) { aIh : Inhab a } (s : sequence a) : a:=
 seq_get s (0)%Z.
 
-Definition tl  (A : Type) (AIh : Inhab Type) (s : sequence A) : sequence A:=
+Definition tl  (a : Type) { aIh : Inhab a } (s : sequence a) : sequence a:=
 seq_sub_l s (1)%Z.
 
-Definition append  (A : Type) (AIh : Inhab Type) (s1 : sequence A) (
-  s2 : sequence A
-) : sequence A:=
+Definition append  (a : Type) { aIh : Inhab a } (s1 : sequence a) (
+  s2 : sequence a
+) : sequence a:=
 app s1 s2.
 
 Parameter multiplicity :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  A -> sequence A -> Coq.Numbers.BinNums.Z.
+  forall a : Type,
+  forall {aIh : Inhab a},
+  a -> sequence a -> Coq.Numbers.BinNums.Z.
 
 Parameter mult_empty :
-  forall A73 : Type,
-  forall x : A73,
-  Coq.Init.Logic.eq (multiplicity x empty) (0)%Z.
+  forall a72 : Type,
+  forall {a72Ih : Inhab a72},
+  forall x : a72,
+  Coq.Init.Logic.eq (multiplicity x (@empty a72 a72Ih)) (0)%Z.
 
 Parameter mult_cons :
-  forall A79 : Type,
-  forall s : sequence A79,
-  forall x : A79,
-  Coq.Init.Logic.eq (add (1)%Z (multiplicity x s)) (
+  forall a78 : Type,
+  forall {a78Ih : Inhab a78},
+  forall s : sequence a78,
+  forall x : a78,
+  Coq.Init.Logic.eq (plus (1)%Z (multiplicity x s)) (
     multiplicity x (cons x s)
   ).
 
 Parameter mult_cons_neutral :
-  forall A87 : Type,
-  forall s : sequence A87,
-  forall x1 : A87,
-  forall x2 : A87,
+  forall a86 : Type,
+  forall {a86Ih : Inhab a86},
+  forall s : sequence a86,
+  forall x1 : a86,
+  forall x2 : a86,
   Coq.Init.Logic.not (Coq.Init.Logic.eq x1 x2) ->
   Coq.Init.Logic.eq (multiplicity x1 s) (multiplicity x1 (cons x2 s)).
 
 Parameter mult_length :
-  forall A92 : Type,
-  forall x : A92,
-  forall s : sequence A92,
+  forall a91 : Type,
+  forall {a91Ih : Inhab a91},
+  forall x : a91,
+  forall s : sequence a91,
   Coq.Init.Logic.and (le (0)%Z (multiplicity x s)) (
     le (multiplicity x s) (length s)
   ).
 
-Definition mem  (A : Type) (AIh : Inhab Type) (x : A) (s : sequence A) : Prop:=
+Definition mem  (a : Type) { aIh : Inhab a } (x : a) (s : sequence a) : Prop:=
 gt (multiplicity x s) (0)%Z.
 
 Parameter map :
-  forall A : Type,
-  forall B : Type,
-  forall AIh : Inhab Type,
-  forall BIh : Inhab Type,
-  (A -> B) -> sequence A -> sequence B.
+  forall a : Type,
+  forall b : Type,
+  forall {aIh : Inhab a},
+  forall {bIh : Inhab b},
+  (a -> b) -> sequence a -> sequence b.
 
 Parameter map_elems :
-  forall A101 : Type,
-  forall A103 : Type,
+  forall a100 : Type,
+  forall a102 : Type,
+  forall {a100Ih : Inhab a100},
+  forall {a102Ih : Inhab a102},
   forall i : Coq.Numbers.BinNums.Z,
-  forall f : A101 -> A103,
-  forall s : sequence A101,
+  forall f : a100 -> a102,
+  forall s : sequence a100,
   Coq.Init.Logic.and (le (0)%Z i) (lt i (length s)) ->
   Coq.Init.Logic.eq (seq_get (map f s) i) (f (seq_get s i)).
 
 Parameter filter :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  (A -> Prop) -> sequence A -> sequence A.
+  forall a : Type,
+  forall {aIh : Inhab a},
+  (a -> Prop) -> sequence a -> sequence a.
 
 Parameter filter_elems :
-  forall A110 : Type,
-  forall f : A110 -> bool,
-  forall s : sequence A110,
-  forall x : A110,
+  forall a109 : Type,
+  forall {a109Ih : Inhab a109},
+  forall f : a109 -> bool,
+  forall s : sequence a109,
+  forall x : a109,
   mem x s -> f x -> mem x (filter f s).
 
-Definition get  (A : Type) (AIh : Inhab Type) (s : sequence A) (
+Definition get  (a : Type) { aIh : Inhab a } (s : sequence a) (
   i : Coq.Numbers.BinNums.Z
-) : A:=
+) : a:=
 seq_get s i.
 
 Parameter set :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  sequence A -> Coq.Numbers.BinNums.Z -> A -> sequence A.
+  forall a : Type,
+  forall {aIh : Inhab a},
+  sequence a -> Coq.Numbers.BinNums.Z -> a -> sequence a.
 
 Parameter set_elem :
-  forall A118 : Type,
-  forall s : sequence A118,
+  forall a117 : Type,
+  forall {a117Ih : Inhab a117},
+  forall s : sequence a117,
   forall i : Coq.Numbers.BinNums.Z,
-  forall x : A118,
+  forall x : a117,
   Coq.Init.Logic.and (le (0)%Z i) (lt i (length s)) ->
   Coq.Init.Logic.eq (seq_get (set s i x) i) x.
 
 Parameter set_elem_other :
-  forall A129 : Type,
-  forall s : sequence A129,
+  forall a128 : Type,
+  forall {a128Ih : Inhab a128},
+  forall s : sequence a128,
   forall i1 : Coq.Numbers.BinNums.Z,
   forall i2 : Coq.Numbers.BinNums.Z,
-  forall x : A129,
+  forall x : a128,
   Coq.Init.Logic.not (Coq.Init.Logic.eq i1 i2) ->
   Coq.Init.Logic.and (le (0)%Z i1) (lt i1 (length s)) ->
   Coq.Init.Logic.and (le (0)%Z i2) (lt i2 (length s)) ->
   Coq.Init.Logic.eq (seq_get (set s i1 x) i2) (seq_get s i2).
 
-Parameter of_list :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  list A -> sequence A.
-
 Parameter rev :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  sequence A -> sequence A.
+  forall a : Type,
+  forall {aIh : Inhab a},
+  sequence a -> sequence a.
 
 Parameter rev_length :
-  forall A133 : Type,
-  forall s : sequence A133,
+  forall a132 : Type,
+  forall {a132Ih : Inhab a132},
+  forall s : sequence a132,
   Coq.Init.Logic.eq (length s) (length (rev s)).
 
 Parameter rev_elems :
-  forall A142 : Type,
+  forall a141 : Type,
+  forall {a141Ih : Inhab a141},
   forall i : Coq.Numbers.BinNums.Z,
-  forall s : sequence A142,
+  forall s : sequence a141,
   Coq.Init.Logic.and (le (0)%Z i) (lt i (length s)) ->
   Coq.Init.Logic.eq (seq_get (rev s) i) (
     seq_get s (minus (minus (length s) (1)%Z) i)
   ).
 
 Parameter fold :
-  forall A : Type,
-  forall B : Type,
-  forall AIh : Inhab Type,
-  forall BIh : Inhab Type,
-  (A -> B -> A) -> A -> sequence B -> A.
+  forall a : Type,
+  forall b : Type,
+  forall {aIh : Inhab a},
+  forall {bIh : Inhab b},
+  (a -> b -> a) -> a -> sequence b -> a.
 
 Parameter fold_empty :
-  forall A147 : Type,
-  forall A148 : Type,
-  forall f : A148 -> A147 -> A148,
-  forall acc : A148,
-  Coq.Init.Logic.eq (fold f acc empty) acc.
+  forall a146 : Type,
+  forall a147 : Type,
+  forall {a146Ih : Inhab a146},
+  forall {a147Ih : Inhab a147},
+  forall f : a147 -> a146 -> a147,
+  forall acc : a147,
+  Coq.Init.Logic.eq (fold f acc (@empty a146 a146Ih)) acc.
 
 Parameter fold_cons :
-  forall A159 : Type,
-  forall A160 : Type,
-  forall f : A160 -> A159 -> A160,
-  forall acc : A160,
-  forall x : A159,
-  forall l : sequence A159,
+  forall a158 : Type,
+  forall a159 : Type,
+  forall {a158Ih : Inhab a158},
+  forall {a159Ih : Inhab a159},
+  forall f : a159 -> a158 -> a159,
+  forall acc : a159,
+  forall x : a158,
+  forall l : sequence a158,
   Coq.Init.Logic.eq (fold f acc (cons x l)) (fold f (f acc x) l).
 
 Parameter extensionality :
-  forall A170 : Type,
-  forall s1 : sequence A170,
-  forall s2 : sequence A170,
+  forall a169 : Type,
+  forall {a169Ih : Inhab a169},
+  forall s1 : sequence a169,
+  forall s2 : sequence a169,
   Coq.Init.Logic.eq (length s1) (length s2) ->
   (
     forall i : Coq.Numbers.BinNums.Z,
@@ -375,23 +399,23 @@ Parameter extensionality :
   Coq.Init.Logic.eq s1 s2.
 
 Parameter of_list :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  list A -> sequence A.
+  forall a : Type,
+  forall {aIh : Inhab a},
+  list a -> sequence a.
 
 Parameter fold_left :
-  forall A : Type,
-  forall B : Type,
-  forall AIh : Inhab Type,
-  forall BIh : Inhab Type,
-  (A -> B -> A) -> A -> sequence B -> A.
+  forall a : Type,
+  forall b : Type,
+  forall {aIh : Inhab a},
+  forall {bIh : Inhab b},
+  (a -> b -> a) -> a -> sequence b -> a.
 
 Parameter fold_right :
-  forall A : Type,
-  forall B : Type,
-  forall AIh : Inhab Type,
-  forall BIh : Inhab Type,
-  (B -> A -> A) -> sequence B -> A -> A.
+  forall a : Type,
+  forall b : Type,
+  forall {aIh : Inhab a},
+  forall {bIh : Inhab b},
+  (b -> a -> a) -> sequence b -> a -> a.
 
 End Sequence.
 
@@ -400,425 +424,455 @@ Module Bag.
 Parameter t : Type -> Type.
 
 Parameter T :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  t A -> t A -> CFML.SepBase.SepBasicSetup.SepSimplArgsCredits.hprop.
+  forall a : Type,
+  forall {aIh : Inhab a},
+  t a -> t a -> CFML.SepBase.SepBasicSetup.SepSimplArgsCredits.hprop.
 
 Parameter multiplicity :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  A -> bag A -> Coq.Numbers.BinNums.Z.
+  forall a : Type,
+  forall {aIh : Inhab a},
+  a -> bag a -> Coq.Numbers.BinNums.Z.
 
 Parameter well_formed :
-  forall A174 : Type,
-  forall b : A174,
-  forall x : bag A174,
+  forall a173 : Type,
+  forall {a173Ih : Inhab a173},
+  forall b : a173,
+  forall x : bag a173,
   ge (multiplicity b x) (0)%Z.
 
-Parameter empty : forall A : Type, forall AIh : Inhab Type, bag A.
+Parameter empty : forall a : Type, forall {aIh : Inhab a}, bag a.
 
 Parameter empty_mult :
-  forall A177 : Type,
-  forall x : A177,
-  Coq.Init.Logic.eq (multiplicity x empty) (0)%Z.
+  forall a176 : Type,
+  forall {a176Ih : Inhab a176},
+  forall x : a176,
+  Coq.Init.Logic.eq (multiplicity x (@empty a176 a176Ih)) (0)%Z.
 
 Parameter init :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  (A -> Coq.Numbers.BinNums.Z) -> bag A.
+  forall a : Type,
+  forall {aIh : Inhab a},
+  (a -> Coq.Numbers.BinNums.Z) -> bag a.
 
 Parameter init_axiom :
-  forall A183 : Type,
-  forall f : A183 -> Coq.Numbers.BinNums.Z,
-  forall x : A183,
-  Coq.Init.Logic.eq (min (0)%Z (f x)) (multiplicity x (init f)).
+  forall a182 : Type,
+  forall {a182Ih : Inhab a182},
+  forall f : a182 -> Coq.Numbers.BinNums.Z,
+  forall x : a182,
+  Coq.Init.Logic.eq (max (0)%Z (f x)) (multiplicity x (init f)).
 
 Parameter add :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  A -> bag A -> bag A.
+  forall a : Type,
+  forall {aIh : Inhab a},
+  a -> bag a -> bag a.
 
 Parameter add_mult_x :
-  forall A189 : Type,
-  forall b : bag A189,
-  forall x : A189,
+  forall a188 : Type,
+  forall {a188Ih : Inhab a188},
+  forall b : bag a188,
+  forall x : a188,
   Coq.Init.Logic.eq (multiplicity x (add x b)) (
-    add (1)%Z (multiplicity x b)
+    plus (1)%Z (multiplicity x b)
   ).
 
 Parameter add_mult_neg_x :
-  forall A196 : Type,
-  forall x : A196,
-  forall y : A196,
-  forall b : bag A196,
+  forall a196 : Type,
+  forall {a196Ih : Inhab a196},
+  forall x : a196,
+  forall y : a196,
+  forall b : bag a196,
   Coq.Init.Logic.not (Coq.Init.Logic.eq x y) ->
-  Coq.Init.Logic.eq (multiplicity y (add x b)) (0)%Z.
+  Coq.Init.Logic.eq (multiplicity y (add x b)) (multiplicity y b).
 
-Definition singleton  (A : Type) (AIh : Inhab Type) (x : A) : bag A:=
-add x empty.
+Definition singleton  (a : Type) { aIh : Inhab a } (x : a) : bag a:=
+add x (@empty a aIh).
 
-Definition mem  (A : Type) (AIh : Inhab Type) (x : A) (b : bag A) : Prop:=
+Definition mem  (a : Type) { aIh : Inhab a } (x : a) (b : bag a) : Prop:=
 gt (multiplicity x b) (0)%Z.
 
 Parameter remove :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  A -> bag A -> bag A.
+  forall a : Type,
+  forall {aIh : Inhab a},
+  a -> bag a -> bag a.
 
-Parameter add_mult_x :
-  forall A205 : Type,
-  forall b : bag A205,
-  forall x : A205,
+Parameter remove_mult_x :
+  forall a205 : Type,
+  forall {a205Ih : Inhab a205},
+  forall b : bag a205,
+  forall x : a205,
   Coq.Init.Logic.eq (multiplicity x (remove x b)) (
-    minus (multiplicity x b) (1)%Z
+    max (0)%Z (minus (multiplicity x b) (1)%Z)
   ).
 
-Parameter add_mult_neg_x :
-  forall A212 : Type,
-  forall x : A212,
-  forall y : A212,
-  forall b : bag A212,
+Parameter remove_mult_neg_x :
+  forall a213 : Type,
+  forall {a213Ih : Inhab a213},
+  forall x : a213,
+  forall y : a213,
+  forall b : bag a213,
   Coq.Init.Logic.not (Coq.Init.Logic.eq x y) ->
-  Coq.Init.Logic.eq (multiplicity y (remove x b)) (0)%Z.
+  Coq.Init.Logic.eq (multiplicity y (remove x b)) (multiplicity y b).
 
 Parameter union :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  bag A -> bag A -> bag A.
+  forall a : Type,
+  forall {aIh : Inhab a},
+  bag a -> bag a -> bag a.
 
 Parameter union_all :
-  forall A220 : Type,
-  forall b : bag A220,
-  forall b' : bag A220,
-  forall x : A220,
+  forall a221 : Type,
+  forall {a221Ih : Inhab a221},
+  forall b : bag a221,
+  forall b' : bag a221,
+  forall x : a221,
   Coq.Init.Logic.eq (max (multiplicity x b) (multiplicity x b')) (
     multiplicity x (union b b')
   ).
 
 Parameter sum :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  bag A -> bag A -> bag A.
+  forall a : Type,
+  forall {aIh : Inhab a},
+  bag a -> bag a -> bag a.
 
 Parameter sum_all :
-  forall A228 : Type,
-  forall b : bag A228,
-  forall b' : bag A228,
-  forall x : A228,
-  Coq.Init.Logic.eq (add (multiplicity x b) (multiplicity x b')) (
+  forall a229 : Type,
+  forall {a229Ih : Inhab a229},
+  forall b : bag a229,
+  forall b' : bag a229,
+  forall x : a229,
+  Coq.Init.Logic.eq (plus (multiplicity x b) (multiplicity x b')) (
     multiplicity x (sum b b')
   ).
 
 Parameter inter :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  bag A -> bag A -> bag A.
+  forall a : Type,
+  forall {aIh : Inhab a},
+  bag a -> bag a -> bag a.
 
 Parameter inter_all :
-  forall A236 : Type,
-  forall b : bag A236,
-  forall b' : bag A236,
-  forall x : A236,
+  forall a237 : Type,
+  forall {a237Ih : Inhab a237},
+  forall b : bag a237,
+  forall b' : bag a237,
+  forall x : a237,
   Coq.Init.Logic.eq (min (multiplicity x b) (multiplicity x b')) (
     multiplicity x (inter b b')
   ).
 
 Parameter diff :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  bag A -> bag A -> bag A.
+  forall a : Type,
+  forall {aIh : Inhab a},
+  bag a -> bag a -> bag a.
 
-Parameter inter_all :
-  forall A244 : Type,
-  forall b : bag A244,
-  forall b' : bag A244,
-  forall x : A244,
+Parameter diff_all :
+  forall a245 : Type,
+  forall {a245Ih : Inhab a245},
+  forall b : bag a245,
+  forall b' : bag a245,
+  forall x : a245,
   Coq.Init.Logic.eq (
     max (0)%Z (minus (multiplicity x b) (multiplicity x b'))
   ) (multiplicity x (diff b b')).
 
-Definition disjoint  (A : Type) (AIh : Inhab Type) (b : bag A) (
-  b' : bag A
+Definition disjoint  (a : Type) { aIh : Inhab a } (b : bag a) (
+  b' : bag a
 ) : Prop:=
-forall A : Type,
-forall x : A,
+forall x : a,
 mem x b -> Coq.Init.Logic.not (mem x b').
 
-Definition subset  (A : Type) (AIh : Inhab Type) (b : bag A) (
-  b' : bag A
-) : Prop:=
-forall A : Type,
-forall x : A,
+Definition subset  (a : Type) { aIh : Inhab a } (b : bag a) (b' : bag a) : Prop:=
+forall x : a,
 le (multiplicity x b) (multiplicity x b').
 
 Parameter filter :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  (A -> Prop) -> bag A -> bag A.
+  forall a : Type,
+  forall {aIh : Inhab a},
+  (a -> Prop) -> bag a -> bag a.
 
 Parameter filter_mem :
-  forall A258 : Type,
-  forall b : bag A258,
-  forall x : A258,
-  forall f : A258 -> bool,
+  forall a259 : Type,
+  forall {a259Ih : Inhab a259},
+  forall b : bag a259,
+  forall x : a259,
+  forall f : a259 -> bool,
   f x ->
   Coq.Init.Logic.eq (multiplicity x (filter f b)) (multiplicity x b).
 
 Parameter filter_mem_neg :
-  forall A265 : Type,
-  forall b : bag A265,
-  forall x : A265,
-  forall f : A265 -> bool,
+  forall a266 : Type,
+  forall {a266Ih : Inhab a266},
+  forall b : bag a266,
+  forall x : a266,
+  forall f : a266 -> bool,
   Coq.Init.Logic.not (f x) ->
   Coq.Init.Logic.eq (multiplicity x (filter f b)) (0)%Z.
 
 Parameter cardinal :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  bag A -> Coq.Numbers.BinNums.Z.
+  forall a : Type,
+  forall {aIh : Inhab a},
+  bag a -> Coq.Numbers.BinNums.Z.
 
-Definition finite  (A : Type) (AIh : Inhab Type) (b : bag A) : Prop:=
-forall A : Type,
+Definition finite  (a : Type) { aIh : Inhab a } (b : bag a) : Prop:=
 Coq.Init.Logic.ex (
-  fun s : sequence A =>
-  forall x : A,
-  mem x b -> mem x s
+  fun s : sequence a =>
+  forall x : a,
+  mem x b -> Sequence.mem x s
 ).
 
 Parameter card_nonneg :
-  forall A272 : Type,
-  forall b : bag A272,
+  forall a273 : Type,
+  forall {a273Ih : Inhab a273},
+  forall b : bag a273,
   ge (cardinal b) (0)%Z.
 
 Parameter card_empty :
-  forall A273 : Type,
-  forall b : A273,
-  Coq.Init.Logic.eq (cardinal empty) (0)%Z.
+  forall a276 : Type,
+  forall a274 : Type,
+  forall {a276Ih : Inhab a276},
+  forall {a274Ih : Inhab a274},
+  forall b : a274,
+  Coq.Init.Logic.eq (cardinal (@empty a276 a276Ih)) (0)%Z.
 
 Parameter card_singleton :
-  forall A279 : Type,
-  forall x : A279,
+  forall a280 : Type,
+  forall {a280Ih : Inhab a280},
+  forall x : a280,
   Coq.Init.Logic.eq (cardinal (singleton x)) (1)%Z.
 
 Parameter card_union :
-  forall A288 : Type,
-  forall b1 : bag A288,
-  forall b2 : bag A288,
+  forall a289 : Type,
+  forall {a289Ih : Inhab a289},
+  forall b1 : bag a289,
+  forall b2 : bag a289,
   finite b1 ->
   finite b2 ->
   Coq.Init.Logic.eq (cardinal (union b1 b2)) (
-    add (cardinal b1) (cardinal b2)
+    plus (cardinal b1) (cardinal b2)
   ).
 
 Parameter card_add :
-  forall A295 : Type,
-  forall x : bag (bag A295),
-  forall b : bag A295,
+  forall a296 : Type,
+  forall {a296Ih : Inhab a296},
+  forall x : a296,
+  forall b : bag a296,
   finite b ->
-  Coq.Init.Logic.eq (cardinal (add b x)) (add (cardinal b) (1)%Z).
+  Coq.Init.Logic.eq (cardinal (add x b)) (plus (cardinal b) (1)%Z).
 
 Parameter card_map :
-  forall A302 : Type,
-  forall f : A302 -> bool,
-  forall b : bag A302,
+  forall a303 : Type,
+  forall {a303Ih : Inhab a303},
+  forall f : a303 -> bool,
+  forall b : bag a303,
   finite b -> le (cardinal (filter f b)) (cardinal b).
 
 Parameter of_seq :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  sequence A -> bag A.
+  forall a : Type,
+  forall {aIh : Inhab a},
+  sequence a -> bag a.
 
 Parameter of_seq_multiplicity :
-  forall A307 : Type,
-  forall s : sequence A307,
-  forall x : A307,
-  Coq.Init.Logic.eq (multiplicity x s) (multiplicity x (of_seq s)).
+  forall a308 : Type,
+  forall {a308Ih : Inhab a308},
+  forall s : sequence a308,
+  forall x : a308,
+  Coq.Init.Logic.eq (Sequence.multiplicity x s) (
+    multiplicity x (of_seq s)
+  ).
 
 End Bag.
 
-Parameter mixfix {} : forall A : Type, forall AIh : Inhab Type, set A.
+Parameter set_create : forall a : Type, forall {aIh : Inhab a}, set a.
 
-Module Set.
+Module _Set.
 
 Parameter t : Type -> Type.
 
 Parameter T :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  t A -> t A -> CFML.SepBase.SepBasicSetup.SepSimplArgsCredits.hprop.
+  forall a : Type,
+  forall {aIh : Inhab a},
+  t a -> t a -> CFML.SepBase.SepBasicSetup.SepSimplArgsCredits.hprop.
 
 Parameter mem :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  A -> set A -> Prop.
+  forall a : Type,
+  forall {aIh : Inhab a},
+  a -> set a -> Prop.
 
-Parameter empty : forall A : Type, forall AIh : Inhab Type, set A.
+Parameter empty : forall a : Type, forall {aIh : Inhab a}, set a.
 
 Parameter empty_mem :
-  forall A311 : Type,
-  forall x : A311,
-  Coq.Init.Logic.not (mem x empty).
+  forall a312 : Type,
+  forall {a312Ih : Inhab a312},
+  forall x : a312,
+  Coq.Init.Logic.not (mem x (@empty a312 a312Ih)).
 
 Parameter add :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  A -> set A -> set A.
+  forall a : Type,
+  forall {aIh : Inhab a},
+  a -> set a -> set a.
 
 Parameter add_mem :
-  forall A315 : Type,
-  forall s : set A315,
-  forall x : A315,
+  forall a316 : Type,
+  forall {a316Ih : Inhab a316},
+  forall s : set a316,
+  forall x : a316,
   mem x (add x s).
 
 Parameter add_mem_neq :
-  forall A322 : Type,
-  forall s : set A322,
-  forall x : A322,
-  forall y : A322,
+  forall a323 : Type,
+  forall {a323Ih : Inhab a323},
+  forall s : set a323,
+  forall x : a323,
+  forall y : a323,
   Coq.Init.Logic.not (Coq.Init.Logic.eq x y) ->
   Coq.Init.Logic.iff (mem x s) (mem x (add y s)).
 
-Definition singleton  (A : Type) (AIh : Inhab Type) (x : A) : set A:=
-add x empty.
+Definition singleton  (a : Type) { aIh : Inhab a } (x : a) : set a:=
+add x (@empty a aIh).
 
 Parameter remove :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  A -> set A -> set A.
+  forall a : Type,
+  forall {aIh : Inhab a},
+  a -> set a -> set a.
 
 Parameter remove_mem :
-  forall A328 : Type,
-  forall s : set A328,
-  forall x : A328,
-  Coq.Init.Logic.not (mem x (add x s)).
+  forall a329 : Type,
+  forall {a329Ih : Inhab a329},
+  forall s : set a329,
+  forall x : a329,
+  Coq.Init.Logic.not (mem x (remove x s)).
 
 Parameter remove_mem_neq :
-  forall A335 : Type,
-  forall s : set A335,
-  forall x : A335,
-  forall y : A335,
+  forall a336 : Type,
+  forall {a336Ih : Inhab a336},
+  forall s : set a336,
+  forall x : a336,
+  forall y : a336,
   Coq.Init.Logic.not (Coq.Init.Logic.eq x y) ->
-  Coq.Init.Logic.iff (mem x s) (mem x (add y s)).
+  Coq.Init.Logic.iff (mem x s) (mem x (remove y s)).
 
 Parameter union :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  set A -> set A -> set A.
+  forall a : Type,
+  forall {aIh : Inhab a},
+  set a -> set a -> set a.
 
 Parameter union_mem :
-  forall A342 : Type,
-  forall s : set A342,
-  forall s' : set A342,
-  forall x : A342,
+  forall a343 : Type,
+  forall {a343Ih : Inhab a343},
+  forall s : set a343,
+  forall s' : set a343,
+  forall x : a343,
   Coq.Init.Logic.or (mem x s) (mem x s') -> mem x (union s s').
 
 Parameter union_mem_neg :
-  forall A349 : Type,
-  forall s : set A349,
-  forall s' : set A349,
-  forall x : A349,
+  forall a350 : Type,
+  forall {a350Ih : Inhab a350},
+  forall s : set a350,
+  forall s' : set a350,
+  forall x : a350,
   Coq.Init.Logic.not (mem x s) ->
   Coq.Init.Logic.not (mem x s') -> Coq.Init.Logic.not (mem x (union s s')).
 
 Parameter inter :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  set A -> set A -> set A.
+  forall a : Type,
+  forall {aIh : Inhab a},
+  set a -> set a -> set a.
 
 Parameter inter_mem :
-  forall A356 : Type,
-  forall s : set A356,
-  forall s' : set A356,
-  forall x : A356,
+  forall a357 : Type,
+  forall {a357Ih : Inhab a357},
+  forall s : set a357,
+  forall s' : set a357,
+  forall x : a357,
   mem x s -> mem x s' -> mem x (inter s s').
 
 Parameter inter_mem_neq :
-  forall A363 : Type,
-  forall s : set A363,
-  forall s' : set A363,
-  forall x : A363,
+  forall a364 : Type,
+  forall {a364Ih : Inhab a364},
+  forall s : set a364,
+  forall s' : set a364,
+  forall x : a364,
   Coq.Init.Logic.not (Coq.Init.Logic.or (mem x s) (mem x s')) ->
-  Coq.Init.Logic.not (mem x (union s s')).
+  Coq.Init.Logic.not (mem x (inter s s')).
 
-Definition disjoint  (A : Type) (AIh : Inhab Type) (s : set A) (
-  s' : set A
+Definition disjoint  (a : Type) { aIh : Inhab a } (s : set a) (
+  s' : set a
 ) : Prop:=
-Coq.Init.Logic.eq (inter s s') empty.
+Coq.Init.Logic.eq (inter s s') (@empty a aIh).
 
 Parameter diff :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  set A -> set A -> set A.
+  forall a : Type,
+  forall {aIh : Inhab a},
+  set a -> set a -> set a.
 
 Parameter diff_mem :
-  forall A372 : Type,
-  forall s : set A372,
-  forall s' : set A372,
-  forall x : A372,
+  forall a373 : Type,
+  forall {a373Ih : Inhab a373},
+  forall s : set a373,
+  forall s' : set a373,
+  forall x : a373,
   mem x s' -> Coq.Init.Logic.not (mem x (diff s s')).
 
 Parameter diff_mem_fst :
-  forall A379 : Type,
-  forall s : set A379,
-  forall s' : set A379,
-  forall x : A379,
+  forall a380 : Type,
+  forall {a380Ih : Inhab a380},
+  forall s : set a380,
+  forall s' : set a380,
+  forall x : a380,
   Coq.Init.Logic.not (mem x s') ->
   Coq.Init.Logic.iff (mem x s) (mem x (diff s s')).
 
-Definition subset  (A : Type) (AIh : Inhab Type) (s : set A) (
-  s' : set A
-) : Prop:=
-forall A : Type,
-forall x : A,
+Definition subset  (a : Type) { aIh : Inhab a } (s : set a) (s' : set a) : Prop:=
+forall x : a,
 mem x s -> mem x s'.
 
 Parameter map :
-  forall A : Type,
-  forall B : Type,
-  forall AIh : Inhab Type,
-  forall BIh : Inhab Type,
-  (A -> B) -> set A -> set B.
+  forall a : Type,
+  forall b : Type,
+  forall {aIh : Inhab a},
+  forall {bIh : Inhab b},
+  (a -> b) -> set a -> set b.
 
 Parameter set_map :
-  forall A392 : Type,
-  forall f : A392 -> A392,
-  forall s : set A392,
-  forall x : A392,
+  forall a392 : Type,
+  forall a393 : Type,
+  forall {a392Ih : Inhab a392},
+  forall {a393Ih : Inhab a393},
+  forall f : a393 -> a392,
+  forall s : set a393,
+  forall x : a392,
   Coq.Init.Logic.iff (mem x (map f s)) (
-    forall A392 : Type,
     Coq.Init.Logic.ex (
-      fun y : A392 =>
-      Coq.Init.Logic.and (Coq.Init.Logic.eq y (f x)) (mem y s)
+      fun y : a393 =>
+      Coq.Init.Logic.and (Coq.Init.Logic.eq (f y) x) (mem y s)
     )
   ).
 
 Parameter cardinal :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  set A -> Coq.Numbers.BinNums.Z.
+  forall a : Type,
+  forall {aIh : Inhab a},
+  set a -> Coq.Numbers.BinNums.Z.
 
-Definition finite  (A : Type) (AIh : Inhab Type) (s : set A) : Prop:=
-forall A : Type,
+Definition finite  (a : Type) { aIh : Inhab a } (s : set a) : Prop:=
 Coq.Init.Logic.ex (
-  fun seq : sequence A =>
-  forall x : A,
-  mem x s -> mem x seq
+  fun seq : sequence a =>
+  forall x : a,
+  mem x s -> Sequence.mem x seq
 ).
 
 Parameter cardinal_nonneg :
-  forall A398 : Type,
-  forall s : set A398,
+  forall a399 : Type,
+  forall {a399Ih : Inhab a399},
+  forall s : set a399,
   ge (cardinal s) (0)%Z.
 
 Parameter cardinal_empty :
-  forall A400 : Type,
-  forall s : set A400,
-  finite s -> Coq.Init.Logic.eq (cardinal empty) (0)%Z.
+  forall a401 : Type,
+  forall {a401Ih : Inhab a401},
+  Coq.Init.Logic.eq (cardinal (@empty a401 a401Ih)) (0)%Z.
 
 Parameter cardinal_remove :
-  forall A414 : Type,
-  forall s : set A414,
-  forall x : A414,
+  forall a413 : Type,
+  forall {a413Ih : Inhab a413},
+  forall s : set a413,
+  forall x : a413,
   finite s ->
   (
     if classicT (mem x s) then
@@ -828,154 +882,155 @@ Parameter cardinal_remove :
   ).
 
 Parameter cardinal_add :
-  forall A426 : Type,
-  forall s : set A426,
-  forall x : A426,
+  forall a425 : Type,
+  forall {a425Ih : Inhab a425},
+  forall s : set a425,
+  forall x : a425,
   finite s ->
   (
     if classicT (mem x s) then
-      Coq.Init.Logic.eq (cardinal (add x s)) (add (cardinal s) (1)%Z)
+      Coq.Init.Logic.eq (cardinal (add x s)) (cardinal s)
       else
-    Coq.Init.Logic.eq (cardinal (add x s)) (cardinal s)
+    Coq.Init.Logic.eq (cardinal (add x s)) (plus (cardinal s) (1)%Z)
   ).
 
 Parameter of_seq :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  sequence A -> set A.
+  forall a : Type,
+  forall {aIh : Inhab a},
+  sequence a -> set a.
 
 Parameter of_seq_set :
-  forall A432 : Type,
-  forall x : A432,
-  forall s : sequence A432,
-  Coq.Init.Logic.iff (mem x s) (mem x (of_seq s)).
+  forall a431 : Type,
+  forall {a431Ih : Inhab a431},
+  forall x : a431,
+  forall s : sequence a431,
+  Coq.Init.Logic.iff (Sequence.mem x s) (mem x (of_seq s)).
 
 Parameter fold :
-  forall A : Type,
-  forall B : Type,
-  forall AIh : Inhab Type,
-  forall BIh : Inhab Type,
-  (A -> B -> B) -> set A -> B -> B.
+  forall a : Type,
+  forall b : Type,
+  forall {aIh : Inhab a},
+  forall {bIh : Inhab b},
+  (a -> b -> b) -> set a -> b -> b.
 
-End Set.
+End _Set.
 
 Module Map.
 
 Parameter t : Type -> Type -> Type.
 
 Parameter T :
-  forall A : Type,
-  forall B : Type,
-  forall AIh : Inhab Type,
-  forall BIh : Inhab Type,
-  t A B -> t A B -> CFML.SepBase.SepBasicSetup.SepSimplArgsCredits.hprop.
+  forall a : Type,
+  forall b : Type,
+  forall {aIh : Inhab a},
+  forall {bIh : Inhab b},
+  t a b -> t a b -> CFML.SepBase.SepBasicSetup.SepSimplArgsCredits.hprop.
 
 Parameter domain :
-  forall A : Type,
-  forall B : Type,
-  forall AIh : Inhab Type,
-  forall BIh : Inhab Type,
-  B -> (A -> B) -> set A.
+  forall a : Type,
+  forall b : Type,
+  forall {aIh : Inhab a},
+  forall {bIh : Inhab b},
+  b -> (a -> b) -> set a.
 
 Parameter domain_mem :
-  forall A439 : Type,
-  forall A440 : Type,
-  forall x : A440,
-  forall m : A440 -> A439,
-  forall default : A439,
+  forall a438 : Type,
+  forall a439 : Type,
+  forall {a438Ih : Inhab a438},
+  forall {a439Ih : Inhab a439},
+  forall x : a439,
+  forall m : a439 -> a438,
+  forall default : a438,
   Coq.Init.Logic.not (Coq.Init.Logic.eq (m x) default) ->
-  mem x (domain default m).
+  _Set.mem x (domain default m).
 
 End Map.
 
 Module Array.
 
 Parameter get :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  array A -> Coq.Numbers.BinNums.Z -> A.
+  forall a : Type,
+  forall {aIh : Inhab a},
+  array a -> Coq.Numbers.BinNums.Z -> a.
 
 Parameter length :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  array A -> Coq.Numbers.BinNums.Z.
+  forall a : Type,
+  forall {aIh : Inhab a},
+  array a -> Coq.Numbers.BinNums.Z.
 
 Parameter to_seq :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  array A -> sequence A.
+  forall a : Type,
+  forall {aIh : Inhab a},
+  array a -> sequence a.
 
 Parameter permut :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  array A -> array A -> Prop.
+  forall a : Type,
+  forall {aIh : Inhab a},
+  array a -> array a -> Prop.
 
 Parameter permut_sub :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  array A ->
-  array A -> Coq.Numbers.BinNums.Z -> Coq.Numbers.BinNums.Z -> Prop.
+  forall a : Type,
+  forall {aIh : Inhab a},
+  array a ->
+  array a -> Coq.Numbers.BinNums.Z -> Coq.Numbers.BinNums.Z -> Prop.
 
 End Array.
 
 Module List.
 
 Parameter fold_left :
-  forall A : Type,
-  forall B : Type,
-  forall AIh : Inhab Type,
-  forall BIh : Inhab Type,
-  (B -> A -> B) -> B -> list A -> B.
+  forall a : Type,
+  forall b : Type,
+  forall {aIh : Inhab a},
+  forall {bIh : Inhab b},
+  (b -> a -> b) -> b -> list a -> b.
 
 Parameter _exists :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  (A -> Prop) -> list A -> Prop.
+  forall a : Type,
+  forall {aIh : Inhab a},
+  (a -> Prop) -> list a -> Prop.
 
 Parameter length :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  list A -> Coq.Numbers.BinNums.Z.
+  forall a : Type,
+  forall {aIh : Inhab a},
+  list a -> Coq.Numbers.BinNums.Z.
 
 Parameter nth :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  list A -> Coq.Numbers.BinNums.Z -> A.
+  forall a : Type,
+  forall {aIh : Inhab a},
+  list a -> Coq.Numbers.BinNums.Z -> a.
 
 Parameter mem :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  A -> list A -> Prop.
+  forall a : Type,
+  forall {aIh : Inhab a},
+  a -> list a -> Prop.
 
 Parameter map :
-  forall A : Type,
-  forall B : Type,
-  forall AIh : Inhab Type,
-  forall BIh : Inhab Type,
-  (A -> B) -> list A -> list B.
+  forall a : Type,
+  forall b : Type,
+  forall {aIh : Inhab a},
+  forall {bIh : Inhab b},
+  (a -> b) -> list a -> list b.
 
 End List.
 
 Module Order.
 
 Parameter is_pre_order :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  (A -> A -> int) -> Prop.
+  forall a : Type,
+  forall {aIh : Inhab a},
+  (a -> a -> int) -> Prop.
 
 End Order.
 
 Parameter ref : Type -> Type.
 
 Parameter Ref :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  ref A -> ref A -> CFML.SepBase.SepBasicSetup.SepSimplArgsCredits.hprop.
+  forall a : Type,
+  forall {aIh : Inhab a},
+  ref a -> ref a -> CFML.SepBase.SepBasicSetup.SepSimplArgsCredits.hprop.
 
-Parameter prefix ! :
-  forall A : Type,
-  forall AIh : Inhab Type,
-  ref A -> A.
+Parameter _UNUSED : forall a : Type, forall {aIh : Inhab a}, ref a -> a.
 
 Parameter logand :
   Coq.Numbers.BinNums.Z -> Coq.Numbers.BinNums.Z -> Coq.Numbers.BinNums.Z.
@@ -983,3 +1038,4 @@ Parameter logand :
 Parameter integer_of_int : int -> Coq.Numbers.BinNums.Z.
 
 
+End Stdlib.
