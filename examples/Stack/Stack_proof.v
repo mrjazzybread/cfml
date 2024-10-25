@@ -1,4 +1,4 @@
-  (** See theories/ExampleStack.v for corresponding formalization in the deep embedding. *)
+(** See theories/ExampleStack.v for corresponding formalization in the deep embedding. *)
 
 Set Implicit Arguments.
 From CFML Require Import WPLib Stdlib.
@@ -23,11 +23,10 @@ Lemma Stack_eq : forall (p:loc) A `{Enc A} (L:list A),
   p ~> Stack L  =  p ~~> L.
 Proof using. auto. Qed.
 
-
 (* ********************************************************************** *)
 (** ** Verification *)
 
-Lemma create_spec : forall A `{Enc A},
+Lemma create_spec : forall A {H : Inhab A},
   SPEC (create tt)
     PRE \[]
     POST (fun p => (p ~> Stack (@nil A))).

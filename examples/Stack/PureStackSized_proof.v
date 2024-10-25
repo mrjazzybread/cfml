@@ -15,6 +15,8 @@ Require Import PureStackSized_ml.
 (** Definition of [r ~> Stack L], which is a notation for [Stack L r], of type
     [hprop] *)
 
+
+
 Definition Stack A `{EA:Enc A} (L:list A) (r:t_ A) :=
    r = {| items' := L; size' := length L |}.
 

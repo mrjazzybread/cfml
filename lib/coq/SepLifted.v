@@ -324,6 +324,40 @@ Lemma injective_enc_list_impl : forall A1 (EA1:Enc A1),
   injective (@enc_list_impl A1 EA1).
 Proof using. injective_enc_prove. Qed.
 
+Definition enc_prop_impl (P : Prop) : val :=
+    If P then val_constr "true" nil else val_constr "false" nil.
+
+Lemma injective_prop : 
+  injective enc_prop_impl.
+Proof. (* Complete Garbage *)
+  unfold injective.
+  intros P Q H1.
+  rewrite eq_prop_eq_iff.
+  split; intros H2; unfold enc_prop_impl in *.
+  - assert (A: (If P then val_constr "true" nil else val_constr "false" nil) = val_constr "true" nil).
+    { apply If_l. assumption. }
+    rewrite A in H1.
+    assert (B : Q \/ ~ Q). { apply classic. }
+    destruct B.
+    + assumption.
+    + assert (C: (If Q then val_constr "true" nil else val_constr "false" nil) = val_constr "false" nil).
+      { apply If_r. assumption. }
+      rewrite C in H1. inversion H1.
+  - assert (A: (If Q then val_constr "true" nil else val_constr "false" nil) = val_constr "true" nil).
+    { apply If_l. assumption. }
+    rewrite A in H1.
+    assert (B : P \/ ~ P). { apply classic. }
+    destruct B.
+    + assumption.
+    + assert (C: (If P then val_constr "true" nil else val_constr "false" nil) = val_constr "false" nil).
+      { apply If_r. assumption. }
+      rewrite C in H1. inversion H1.
+Qed.
+    
+  
+Global Instance Enc_prop : Enc Prop :=
+  make_Enc injective_prop.
+
 Global Instance Enc_list : forall A1 (EA1:Enc A1), Enc (list A1) :=
   fun A1 (EA1:Enc A1) =>
   make_Enc (@injective_enc_list_impl A1 EA1).
