@@ -97,27 +97,11 @@ Module Stdlib.
       unfold app in * ;
       unfold seq_get in *.
 
-    Fixpoint seq_sub_aux {A} (s : sequence A) (i1 : nat) (i2 : nat) : sequence A :=
-      match s with
-      |nil => nil
-      |cons x t =>
-         match i1 with
-         |S i1' => seq_sub_aux t i1' i2
-         |O => match i2 with
-              |S i2' => cons x (seq_sub_aux t O i2')
-              |O => nil
-              end
-         end
-      end.
+    
     
     Definition seq_sub {A} {Ih : Inhab A} (s : sequence A) (i1 : Z) (i2 : Z) : sequence A :=
-      if (i1 <? 0) || (i1 >? i2) || (i2 >? length s)
-      then arbitrary
-      else
-        let i1 := Z.to_nat i1 in
-        let i2 := Z.to_nat i2 in
-        seq_sub_aux s i1 i2.
-
+      LibListZ.take (i2 - i1) (LibListZ.drop i1 s).
+    
     
     Definition seq_sub_l  (A : Type) {Ih : Inhab A} (s : sequence A) (
         i : Coq.Numbers.BinNums.Z
@@ -252,7 +236,7 @@ Module Stdlib.
         auto.
       Qed.
       
-      Axiom subseq :
+      Lemma subseq :
         forall {a50 : Type},
         forall {_Ga50 : Inhab a50},
         forall s : sequence a50,
@@ -265,18 +249,37 @@ Module Stdlib.
                 )
             ) ->
           Coq.Init.Logic.eq (seq_get s i) (seq_get (seq_sub s i1 i2) (minus i i1)).
-
-      Axiom subseq_len :
-        forall {a56 : Type},
-        forall {_Ga56 : Inhab a56},
-        forall s : sequence a56,
+      Proof.
+        unfold_all.
+        unfold length.
+        unfold seq_sub.
+        intros A IhA s i i1 i2 [H1 [H2 [H3 H4]]].
+        rewrite read_take; try (split; math).
+        - rewrite read_drop; try (split; math).
+          f_equal.
+          math.
+        - rewrite LibListZ.length_drop; math.        
+      Qed.
+        
+      Lemma subseq_len :
+        forall {a60 : Type},
+        forall {Ih_a60 : Inhab a60},
+        forall s : sequence a60,
         forall i1 : Coq.Numbers.BinNums.Z,
         forall i2 : Coq.Numbers.BinNums.Z,
           Coq.Init.Logic.and (le (0)%Z i1) (
               Coq.Init.Logic.and (le i1 i2) (lt i2 (length s))
             ) ->
-          Coq.Init.Logic.eq (length (seq_sub s i1 i2)) (minus i1 i2).
-
+          Coq.Init.Logic.eq (length (seq_sub s i1 i2)) (minus i2 i1).
+      Proof.
+        unfold length.
+        unfold_all.
+        intros A IhA s i1 i2 [H1 [H2 H3]].
+        unfold seq_sub.
+        rewrite LibListZ.length_take; try math.
+        rewrite LibListZ.length_drop; try math.
+      Qed.
+        
       Fixpoint init_aux {A} (n : nat) (f : Z -> A) : sequence A :=
         match n with
         |O => nil

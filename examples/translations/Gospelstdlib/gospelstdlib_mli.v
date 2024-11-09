@@ -222,7 +222,7 @@ Axiom subseq_len :
   Coq.Init.Logic.and (le (0)%Z i1) (
     Coq.Init.Logic.and (le i1 i2) (lt i2 (length s))
   ) ->
-  Coq.Init.Logic.eq (length (seq_sub s i1 i2)) (minus i1 i2).
+  Coq.Init.Logic.eq (length (seq_sub s i1 i2)) (minus i2 i1).
 
 Parameter empty :
   forall {a : Type},
@@ -1046,7 +1046,7 @@ Axiom set_map :
 Parameter partition :
   forall {a : Type},
   forall {Ih_a : Inhab a},
-  (a -> Prop) -> set a -> (set a) * (set a).
+  (a -> Prop) -> set a -> tuple2 (set a) (set a).
 
 Axiom partition_l_mem :
   forall {a486 : Type},
@@ -1057,7 +1057,7 @@ Axiom partition_l_mem :
   forall p1 : set a486,
   forall p2 : set a486,
   mem x s ->
-  f x -> Coq.Init.Logic.eq (partition f s) (p1, p2) -> mem x p1.
+  f x -> Coq.Init.Logic.eq (partition f s) (tuple2 p1 p2) -> mem x p1.
 
 Axiom partition_r_mem :
   forall {a498 : Type},
@@ -1069,7 +1069,7 @@ Axiom partition_r_mem :
   forall p2 : set a498,
   mem x s ->
   Coq.Init.Logic.not (f x) ->
-  Coq.Init.Logic.eq (partition f s) (p1, p2) -> mem x p2.
+  Coq.Init.Logic.eq (partition f s) (tuple2 p1 p2) -> mem x p2.
 
 Parameter cardinal :
   forall {a : Type},
