@@ -1,7 +1,5 @@
 Set Implicit Arguments.
 
-Require Import stdlib_defs.
-
 Require Coq.ZArith.BinInt TLC.LibLogic TLC.LibRelation TLC.LibInt TLC.LibListZ.
 
 Require Import CFML.SepBase CFML.SepLifted CFML.WPLib CFML.WPLifted CFML.WPRecord CFML.WPArray CFML.WPBuiltin.
@@ -18,7 +16,8 @@ Parameter sequence : Type -> Type.
 
 Parameter Sequence :
   forall {a : Type},
-  forall {_Ga : OCamlType a},
+  forall {Ih_a : Inhab a},
+  forall {Enc_a : Enc a},
   sequence a ->
   sequence a -> CFML.SepBase.SepBasicSetup.SepSimplArgsCredits.hprop.
 
@@ -26,14 +25,16 @@ Parameter bag : Type -> Type.
 
 Parameter Bag :
   forall {a : Type},
-  forall {_Ga : OCamlType a},
+  forall {Ih_a : Inhab a},
+  forall {Enc_a : Enc a},
   bag a -> bag a -> CFML.SepBase.SepBasicSetup.SepSimplArgsCredits.hprop.
 
 Parameter set : Type -> Type.
 
 Parameter _Set :
   forall {a : Type},
-  forall {_Ga : OCamlType a},
+  forall {Ih_a : Inhab a},
+  forall {Enc_a : Enc a},
   set a -> set a -> CFML.SepBase.SepBasicSetup.SepSimplArgsCredits.hprop.
 
 Parameter map : Type -> Type -> Type.
@@ -41,8 +42,10 @@ Parameter map : Type -> Type -> Type.
 Parameter Map :
   forall {a : Type},
   forall {b : Type},
-  forall {_Ga : OCamlType a},
-  forall {_Gb : OCamlType b},
+  forall {Ih_a : Inhab a},
+  forall {Enc_a : Enc a},
+  forall {Ih_b : Inhab b},
+  forall {Enc_b : Enc b},
   map a b ->
   map a b -> CFML.SepBase.SepBasicSetup.SepSimplArgsCredits.hprop.
 
@@ -86,41 +89,37 @@ Parameter lt : Coq.Numbers.BinNums.Z -> Coq.Numbers.BinNums.Z -> Prop.
 
 Parameter le : Coq.Numbers.BinNums.Z -> Coq.Numbers.BinNums.Z -> Prop.
 
+Parameter integer_of_int : int -> Coq.Numbers.BinNums.Z.
+
 Parameter max_int : Coq.Numbers.BinNums.Z.
 
 Parameter min_int : Coq.Numbers.BinNums.Z.
 
 Parameter app :
   forall {a : Type},
-  forall {_Ga : GospelType a},
+  forall {Ih_a : Inhab a},
   sequence a -> sequence a -> sequence a.
 
 Parameter seq_get :
   forall {a : Type},
-  forall {_Ga : GospelType a},
+  forall {Ih_a : Inhab a},
   sequence a -> Coq.Numbers.BinNums.Z -> a.
-
-Definition map_set  { a : Type } { b : Type } { _Ga : GospelType a } {
-  _Gb : GospelType b
-} (f : a -> b) (x : a) (y : b) : a -> b:=
-fun arg : a =>
-if classicT (Coq.Init.Logic.eq arg x) then y else f x.
 
 Parameter seq_sub :
   forall {a : Type},
-  forall {_Ga : GospelType a},
+  forall {Ih_a : Inhab a},
   sequence a ->
   Coq.Numbers.BinNums.Z -> Coq.Numbers.BinNums.Z -> sequence a.
 
 Parameter seq_sub_l :
   forall {a : Type},
-  forall {_Ga : GospelType a},
+  forall {Ih_a : Inhab a},
   sequence a -> Coq.Numbers.BinNums.Z -> sequence a.
 
-Definition seq_sub_r  { a : Type } { _Ga : GospelType a } (
-  s : sequence a
-) (i : Coq.Numbers.BinNums.Z) : sequence a:=
-seq_sub s (0)%Z i.
+Parameter seq_sub_r :
+  forall {a : Type},
+  forall {Ih_a : Inhab a},
+  sequence a -> Coq.Numbers.BinNums.Z -> sequence a.
 
 Module Sequence.
 
@@ -128,46 +127,55 @@ Parameter t : Type -> Type.
 
 Parameter Sequence :
   forall {a : Type},
-  forall {_Ga : OCamlType a},
+  forall {Ih_a : Inhab a},
+  forall {Enc_a : Enc a},
   t a -> t a -> CFML.SepBase.SepBasicSetup.SepSimplArgsCredits.hprop.
 
 Parameter length :
   forall {a : Type},
-  forall {_Ga : GospelType a},
+  forall {Ih_a : Inhab a},
   sequence a -> Coq.Numbers.BinNums.Z.
 
-Definition in_range  { a : Type } { _Ga : GospelType a } (
-  s : sequence a
-) (i : Coq.Numbers.BinNums.Z) : Prop:=
-Coq.Init.Logic.and (le (0)%Z i) (lt i (length s)).
+Parameter in_range :
+  forall {a : Type},
+  forall {Ih_a : Inhab a},
+  sequence a -> Coq.Numbers.BinNums.Z -> Prop.
+
+Axiom in_range_def :
+  forall {a4 : Type},
+  forall {Ih_a4 : Inhab a4},
+  forall s : sequence a4,
+  forall i : Coq.Numbers.BinNums.Z,
+  Coq.Init.Logic.iff (in_range s i) (
+    Coq.Init.Logic.and (le (0)%Z i) (lt i (length s))
+  ).
 
 Axiom length_nonneg :
-  forall {a8 : Type},
-  forall {_Ga8 : GospelType a8},
-  forall s : sequence a8,
+  forall {a6 : Type},
+  forall {Ih_a6 : Inhab a6},
+  forall s : sequence a6,
   le (0)%Z (length s).
 
 Axiom append_length :
-  forall {a14 : Type},
-  forall {_Ga14 : GospelType a14},
-  forall s : sequence a14,
-  forall s' : sequence a14,
+  forall {a12 : Type},
+  forall {Ih_a12 : Inhab a12},
+  forall s : sequence a12,
+  forall s' : sequence a12,
   Coq.Init.Logic.eq (length (app s s')) (plus (length s) (length s')).
 
 Axiom append_elems_left :
-  forall {a23 : Type},
-  forall {_Ga23 : GospelType a23},
-  forall s : sequence a23,
-  forall s' : sequence a23,
+  forall {a21 : Type},
+  forall {Ih_a21 : Inhab a21},
+  forall s : sequence a21,
+  forall s' : sequence a21,
   forall i : Coq.Numbers.BinNums.Z,
-  Coq.Init.Logic.and (le (0)%Z i) (lt i (length s)) ->
-  Coq.Init.Logic.eq (seq_get (app s s') i) (seq_get s i).
+  in_range s i -> Coq.Init.Logic.eq (seq_get (app s s') i) (seq_get s i).
 
 Axiom append_elems_right :
-  forall {a34 : Type},
-  forall {_Ga34 : GospelType a34},
-  forall s : sequence a34,
-  forall s' : sequence a34,
+  forall {a32 : Type},
+  forall {Ih_a32 : Inhab a32},
+  forall s : sequence a32,
+  forall s' : sequence a32,
   forall i : Coq.Numbers.BinNums.Z,
   Coq.Init.Logic.and (le (length s) i) (
     lt i (plus (length s) (length s'))
@@ -177,17 +185,24 @@ Axiom append_elems_right :
   ).
 
 Axiom subseq_l :
-  forall {a40 : Type},
-  forall {_Ga40 : GospelType a40},
-  forall s : sequence a40,
+  forall {a38 : Type},
+  forall {Ih_a38 : Inhab a38},
+  forall s : sequence a38,
   forall i : Coq.Numbers.BinNums.Z,
-  Coq.Init.Logic.and (le (0)%Z i) (lt i (length s)) ->
+  in_range s i ->
   Coq.Init.Logic.eq (seq_sub_l s i) (seq_sub s i (length s)).
 
+Axiom subseq_r :
+  forall {a44 : Type},
+  forall {Ih_a44 : Inhab a44},
+  forall s : sequence a44,
+  forall i : Coq.Numbers.BinNums.Z,
+  in_range s i -> Coq.Init.Logic.eq (seq_sub_r s i) (seq_sub s (0)%Z i).
+
 Axiom subseq :
-  forall {a50 : Type},
-  forall {_Ga50 : GospelType a50},
-  forall s : sequence a50,
+  forall {a54 : Type},
+  forall {Ih_a54 : Inhab a54},
+  forall s : sequence a54,
   forall i : Coq.Numbers.BinNums.Z,
   forall i1 : Coq.Numbers.BinNums.Z,
   forall i2 : Coq.Numbers.BinNums.Z,
@@ -199,9 +214,9 @@ Axiom subseq :
   Coq.Init.Logic.eq (seq_get s i) (seq_get (seq_sub s i1 i2) (minus i i1)).
 
 Axiom subseq_len :
-  forall {a56 : Type},
-  forall {_Ga56 : GospelType a56},
-  forall s : sequence a56,
+  forall {a60 : Type},
+  forall {Ih_a60 : Inhab a60},
+  forall s : sequence a60,
   forall i1 : Coq.Numbers.BinNums.Z,
   forall i2 : Coq.Numbers.BinNums.Z,
   Coq.Init.Logic.and (le (0)%Z i1) (
@@ -209,161 +224,222 @@ Axiom subseq_len :
   ) ->
   Coq.Init.Logic.eq (length (seq_sub s i1 i2)) (minus i1 i2).
 
+Parameter empty :
+  forall {a : Type},
+  forall {Ih_a : Inhab a},
+  sequence a.
+
+Axiom empty_length :
+  forall {a63 : Type},
+  forall {Ih_a63 : Inhab a63},
+  Coq.Init.Logic.eq (length (@empty a63 Ih_a63)) (0)%Z.
+
 Parameter init :
   forall {a : Type},
-  forall {_Ga : GospelType a},
+  forall {Ih_a : Inhab a},
   Coq.Numbers.BinNums.Z -> (Coq.Numbers.BinNums.Z -> a) -> sequence a.
 
 Axiom init_length :
-  forall {a61 : Type},
-  forall {_Ga61 : GospelType a61},
+  forall {a68 : Type},
+  forall {Ih_a68 : Inhab a68},
   forall n : Coq.Numbers.BinNums.Z,
-  forall f : Coq.Numbers.BinNums.Z -> a61,
+  forall f : Coq.Numbers.BinNums.Z -> a68,
   ge n (0)%Z -> Coq.Init.Logic.eq (length (init n f)) n.
 
 Axiom init_elems :
-  forall {a69 : Type},
-  forall {_Ga69 : GospelType a69},
+  forall {a76 : Type},
+  forall {Ih_a76 : Inhab a76},
   forall n : Coq.Numbers.BinNums.Z,
-  forall f : Coq.Numbers.BinNums.Z -> a69,
+  forall f : Coq.Numbers.BinNums.Z -> a76,
   forall i : Coq.Numbers.BinNums.Z,
   Coq.Init.Logic.and (le (0)%Z i) (lt i n) ->
   Coq.Init.Logic.eq (seq_get (init n f) i) (f i).
 
-Parameter empty :
+Parameter singleton :
   forall {a : Type},
-  forall {_Ga : GospelType a},
-  sequence a.
+  forall {Ih_a : Inhab a},
+  a -> sequence a.
 
-Axiom empty_length :
-  forall {a71 : Type},
-  forall {_Ga71 : GospelType a71},
-  Coq.Init.Logic.eq (length (@empty a71 _Ga71)) (0)%Z.
+Axiom singleton_def :
+  forall {a82 : Type},
+  forall {Ih_a82 : Inhab a82},
+  forall x : a82,
+  forall f : Coq.Numbers.BinNums.Z -> a82,
+  Coq.Init.Logic.eq (f (0)%Z) x ->
+  Coq.Init.Logic.eq (singleton x) (init (1)%Z f).
 
-Definition singleton  { a : Type } { _Ga : GospelType a } (x : a) : sequence a:=
-init (1)%Z (fun _ : Coq.Numbers.BinNums.Z => x).
+Parameter cons :
+  forall {a : Type},
+  forall {Ih_a : Inhab a},
+  a -> sequence a -> sequence a.
 
-Definition cons  { a : Type } { _Ga : GospelType a } (x : a) (
-  s : sequence a
-) : sequence a:=
-app (singleton x) s.
+Axiom cons_def :
+  forall {a88 : Type},
+  forall {Ih_a88 : Inhab a88},
+  forall x : a88,
+  forall s : sequence a88,
+  Coq.Init.Logic.eq (cons x s) (app (singleton x) s).
 
-Definition snoc  { a : Type } { _Ga : GospelType a } (s : sequence a) (
-  x : a
-) : sequence a:=
-app s (singleton x).
+Parameter snoc :
+  forall {a : Type},
+  forall {Ih_a : Inhab a},
+  sequence a -> a -> sequence a.
 
-Definition hd  { a : Type } { _Ga : GospelType a } (s : sequence a) : a:=
-seq_get s (0)%Z.
+Axiom snoc_def :
+  forall {a94 : Type},
+  forall {Ih_a94 : Inhab a94},
+  forall s : sequence a94,
+  forall x : a94,
+  Coq.Init.Logic.eq (snoc s x) (app s (singleton x)).
 
-Definition tl  { a : Type } { _Ga : GospelType a } (s : sequence a) : sequence a:=
-seq_sub_l s (1)%Z.
+Parameter hd :
+  forall {a : Type},
+  forall {Ih_a : Inhab a},
+  sequence a -> a.
 
-Definition append  { a : Type } { _Ga : GospelType a } (s1 : sequence a) (
-  s2 : sequence a
-) : sequence a:=
-app s1 s2.
+Axiom hd_def :
+  forall {a99 : Type},
+  forall {Ih_a99 : Inhab a99},
+  forall s : sequence a99,
+  Coq.Init.Logic.eq (hd s) (seq_get s (0)%Z).
+
+Parameter tl :
+  forall {a : Type},
+  forall {Ih_a : Inhab a},
+  sequence a -> sequence a.
+
+Axiom tl_def :
+  forall {a102 : Type},
+  forall {Ih_a102 : Inhab a102},
+  forall s : sequence a102,
+  Coq.Init.Logic.eq (tl s) (seq_sub_l s (1)%Z).
+
+Parameter append :
+  forall {a : Type},
+  forall {Ih_a : Inhab a},
+  sequence a -> sequence a -> sequence a.
+
+Axiom append_def :
+  forall {a107 : Type},
+  forall {Ih_a107 : Inhab a107},
+  forall s1 : sequence a107,
+  forall s2 : sequence a107,
+  Coq.Init.Logic.eq (append s1 s2) (app s1 s2).
 
 Parameter multiplicity :
   forall {a : Type},
-  forall {_Ga : GospelType a},
+  forall {Ih_a : Inhab a},
   a -> sequence a -> Coq.Numbers.BinNums.Z.
 
 Axiom mult_empty :
-  forall {a85 : Type},
-  forall {_Ga85 : GospelType a85},
-  forall x : a85,
-  Coq.Init.Logic.eq (multiplicity x (@empty a85 _Ga85)) (0)%Z.
+  forall {a111 : Type},
+  forall {Ih_a111 : Inhab a111},
+  forall x : a111,
+  Coq.Init.Logic.eq (multiplicity x (@empty a111 Ih_a111)) (0)%Z.
 
 Axiom mult_cons :
-  forall {a91 : Type},
-  forall {_Ga91 : GospelType a91},
-  forall s : sequence a91,
-  forall x : a91,
+  forall {a117 : Type},
+  forall {Ih_a117 : Inhab a117},
+  forall s : sequence a117,
+  forall x : a117,
   Coq.Init.Logic.eq (plus (1)%Z (multiplicity x s)) (
     multiplicity x (cons x s)
   ).
 
 Axiom mult_cons_neutral :
-  forall {a99 : Type},
-  forall {_Ga99 : GospelType a99},
-  forall s : sequence a99,
-  forall x1 : a99,
-  forall x2 : a99,
+  forall {a125 : Type},
+  forall {Ih_a125 : Inhab a125},
+  forall s : sequence a125,
+  forall x1 : a125,
+  forall x2 : a125,
   Coq.Init.Logic.not (Coq.Init.Logic.eq x1 x2) ->
   Coq.Init.Logic.eq (multiplicity x1 s) (multiplicity x1 (cons x2 s)).
 
 Axiom mult_length :
-  forall {a104 : Type},
-  forall {_Ga104 : GospelType a104},
-  forall x : a104,
-  forall s : sequence a104,
+  forall {a130 : Type},
+  forall {Ih_a130 : Inhab a130},
+  forall x : a130,
+  forall s : sequence a130,
   Coq.Init.Logic.and (le (0)%Z (multiplicity x s)) (
     le (multiplicity x s) (length s)
   ).
 
-Definition mem  { a : Type } { _Ga : GospelType a } (x : a) (
-  s : sequence a
-) : Prop:=
-gt (multiplicity x s) (0)%Z.
+Parameter mem :
+  forall {a : Type},
+  forall {Ih_a : Inhab a},
+  a -> sequence a -> Prop.
+
+Axiom mem_def :
+  forall {a134 : Type},
+  forall {Ih_a134 : Inhab a134},
+  forall s : sequence a134,
+  forall x : a134,
+  Coq.Init.Logic.iff (mem x s) (gt (multiplicity x s) (0)%Z).
 
 Parameter map :
   forall {a : Type},
   forall {b : Type},
-  forall {_Ga : GospelType a},
-  forall {_Gb : GospelType b},
+  forall {Ih_a : Inhab a},
+  forall {Ih_b : Inhab b},
   (a -> b) -> sequence a -> sequence b.
 
 Axiom map_elems :
-  forall {a113 : Type},
-  forall {a115 : Type},
-  forall {_Ga113 : GospelType a113},
-  forall {_Ga115 : GospelType a115},
+  forall {a142 : Type},
+  forall {a144 : Type},
+  forall {Ih_a142 : Inhab a142},
+  forall {Ih_a144 : Inhab a144},
   forall i : Coq.Numbers.BinNums.Z,
-  forall f : a113 -> a115,
-  forall s : sequence a113,
+  forall f : a142 -> a144,
+  forall s : sequence a142,
   Coq.Init.Logic.and (le (0)%Z i) (lt i (length s)) ->
   Coq.Init.Logic.eq (seq_get (map f s) i) (f (seq_get s i)).
 
 Parameter filter :
   forall {a : Type},
-  forall {_Ga : GospelType a},
+  forall {Ih_a : Inhab a},
   (a -> Prop) -> sequence a -> sequence a.
 
 Axiom filter_elems :
-  forall {a122 : Type},
-  forall {_Ga122 : GospelType a122},
-  forall f : a122 -> bool,
-  forall s : sequence a122,
-  forall x : a122,
+  forall {a151 : Type},
+  forall {Ih_a151 : Inhab a151},
+  forall f : a151 -> bool,
+  forall s : sequence a151,
+  forall x : a151,
   mem x s -> f x -> mem x (filter f s).
 
-Definition get  { a : Type } { _Ga : GospelType a } (s : sequence a) (
-  i : Coq.Numbers.BinNums.Z
-) : a:=
-seq_get s i.
+Parameter get :
+  forall {a : Type},
+  forall {Ih_a : Inhab a},
+  sequence a -> Coq.Numbers.BinNums.Z -> a.
+
+Axiom get_def :
+  forall {a156 : Type},
+  forall {Ih_a156 : Inhab a156},
+  forall s : sequence a156,
+  forall i : Coq.Numbers.BinNums.Z,
+  Coq.Init.Logic.eq (get s i) (seq_get s i).
 
 Parameter set :
   forall {a : Type},
-  forall {_Ga : GospelType a},
+  forall {Ih_a : Inhab a},
   sequence a -> Coq.Numbers.BinNums.Z -> a -> sequence a.
 
 Axiom set_elem :
-  forall {a130 : Type},
-  forall {_Ga130 : GospelType a130},
-  forall s : sequence a130,
+  forall {a163 : Type},
+  forall {Ih_a163 : Inhab a163},
+  forall s : sequence a163,
   forall i : Coq.Numbers.BinNums.Z,
-  forall x : a130,
+  forall x : a163,
   Coq.Init.Logic.and (le (0)%Z i) (lt i (length s)) ->
   Coq.Init.Logic.eq (seq_get (set s i x) i) x.
 
 Axiom set_elem_other :
-  forall {a141 : Type},
-  forall {_Ga141 : GospelType a141},
-  forall s : sequence a141,
+  forall {a174 : Type},
+  forall {Ih_a174 : Inhab a174},
+  forall s : sequence a174,
   forall i1 : Coq.Numbers.BinNums.Z,
   forall i2 : Coq.Numbers.BinNums.Z,
-  forall x : a141,
+  forall x : a174,
   Coq.Init.Logic.not (Coq.Init.Logic.eq i1 i2) ->
   Coq.Init.Logic.and (le (0)%Z i1) (lt i1 (length s)) ->
   Coq.Init.Logic.and (le (0)%Z i2) (lt i2 (length s)) ->
@@ -371,57 +447,30 @@ Axiom set_elem_other :
 
 Parameter rev :
   forall {a : Type},
-  forall {_Ga : GospelType a},
+  forall {Ih_a : Inhab a},
   sequence a -> sequence a.
 
 Axiom rev_length :
-  forall {a145 : Type},
-  forall {_Ga145 : GospelType a145},
-  forall s : sequence a145,
+  forall {a178 : Type},
+  forall {Ih_a178 : Inhab a178},
+  forall s : sequence a178,
   Coq.Init.Logic.eq (length s) (length (rev s)).
 
 Axiom rev_elems :
-  forall {a154 : Type},
-  forall {_Ga154 : GospelType a154},
+  forall {a187 : Type},
+  forall {Ih_a187 : Inhab a187},
   forall i : Coq.Numbers.BinNums.Z,
-  forall s : sequence a154,
+  forall s : sequence a187,
   Coq.Init.Logic.and (le (0)%Z i) (lt i (length s)) ->
   Coq.Init.Logic.eq (seq_get (rev s) i) (
     seq_get s (minus (minus (length s) (1)%Z) i)
   ).
 
-Parameter fold :
-  forall {a : Type},
-  forall {b : Type},
-  forall {_Ga : GospelType a},
-  forall {_Gb : GospelType b},
-  (a -> b -> a) -> a -> sequence b -> a.
-
-Axiom fold_empty :
-  forall {a159 : Type},
-  forall {a160 : Type},
-  forall {_Ga159 : GospelType a159},
-  forall {_Ga160 : GospelType a160},
-  forall f : a160 -> a159 -> a160,
-  forall acc : a160,
-  Coq.Init.Logic.eq (fold f acc (@empty a159 _Ga159)) acc.
-
-Axiom fold_cons :
-  forall {a171 : Type},
-  forall {a172 : Type},
-  forall {_Ga171 : GospelType a171},
-  forall {_Ga172 : GospelType a172},
-  forall f : a172 -> a171 -> a172,
-  forall acc : a172,
-  forall x : a171,
-  forall l : sequence a171,
-  Coq.Init.Logic.eq (fold f acc (cons x l)) (fold f (f acc x) l).
-
 Axiom extensionality :
-  forall {a182 : Type},
-  forall {_Ga182 : GospelType a182},
-  forall s1 : sequence a182,
-  forall s2 : sequence a182,
+  forall {a197 : Type},
+  forall {Ih_a197 : Inhab a197},
+  forall s1 : sequence a197,
+  forall s2 : sequence a197,
   Coq.Init.Logic.eq (length s1) (length s2) ->
   (
     forall i : Coq.Numbers.BinNums.Z,
@@ -430,24 +479,66 @@ Axiom extensionality :
   ) ->
   Coq.Init.Logic.eq s1 s2.
 
-Parameter of_list :
-  forall {a : Type},
-  forall {_Ga : GospelType a},
-  list a -> sequence a.
-
 Parameter fold_left :
   forall {a : Type},
   forall {b : Type},
-  forall {_Ga : GospelType a},
-  forall {_Gb : GospelType b},
+  forall {Ih_a : Inhab a},
+  forall {Ih_b : Inhab b},
   (a -> b -> a) -> a -> sequence b -> a.
+
+Axiom fold_left_empty :
+  forall {a203 : Type},
+  forall {a204 : Type},
+  forall {Ih_a203 : Inhab a203},
+  forall {Ih_a204 : Inhab a204},
+  forall f : a204 -> a203 -> a204,
+  forall acc : a204,
+  Coq.Init.Logic.eq (fold_left f acc (@empty a203 Ih_a203)) acc.
+
+Axiom fold_left_cons :
+  forall {a215 : Type},
+  forall {a216 : Type},
+  forall {Ih_a215 : Inhab a215},
+  forall {Ih_a216 : Inhab a216},
+  forall f : a216 -> a215 -> a216,
+  forall acc : a216,
+  forall x : a215,
+  forall l : sequence a215,
+  Coq.Init.Logic.eq (fold_left f acc (cons x l)) (fold_left f (f acc x) l).
 
 Parameter fold_right :
   forall {a : Type},
   forall {b : Type},
-  forall {_Ga : GospelType a},
-  forall {_Gb : GospelType b},
-  (b -> a -> a) -> sequence b -> a -> a.
+  forall {Ih_a : Inhab a},
+  forall {Ih_b : Inhab b},
+  (a -> b -> b) -> sequence a -> b -> b.
+
+Axiom fold_right_empty :
+  forall {a221 : Type},
+  forall {a222 : Type},
+  forall {Ih_a221 : Inhab a221},
+  forall {Ih_a222 : Inhab a222},
+  forall acc : a222,
+  forall f : a221 -> a222 -> a222,
+  Coq.Init.Logic.eq (fold_right f (@empty a221 Ih_a221) acc) acc.
+
+Axiom fold_right_cons :
+  forall {a232 : Type},
+  forall {a234 : Type},
+  forall {Ih_a232 : Inhab a232},
+  forall {Ih_a234 : Inhab a234},
+  forall acc : a234,
+  forall f : a232 -> a234 -> a234,
+  forall x : a232,
+  forall l : sequence a232,
+  Coq.Init.Logic.eq (fold_right f (cons x l) acc) (
+    f x (fold_right f l acc)
+  ).
+
+Parameter of_list :
+  forall {a : Type},
+  forall {Ih_a : Inhab a},
+  list a -> sequence a.
 
 End Sequence.
 
@@ -457,222 +548,268 @@ Parameter t : Type -> Type.
 
 Parameter Bag :
   forall {a : Type},
-  forall {_Ga : OCamlType a},
+  forall {Ih_a : Inhab a},
+  forall {Enc_a : Enc a},
   t a -> t a -> CFML.SepBase.SepBasicSetup.SepSimplArgsCredits.hprop.
 
 Parameter multiplicity :
   forall {a : Type},
-  forall {_Ga : GospelType a},
+  forall {Ih_a : Inhab a},
   a -> bag a -> Coq.Numbers.BinNums.Z.
 
 Axiom well_formed :
-  forall {a186 : Type},
-  forall {_Ga186 : GospelType a186},
-  forall b : a186,
-  forall x : bag a186,
-  ge (multiplicity b x) (0)%Z.
+  forall {a237 : Type},
+  forall {Ih_a237 : Inhab a237},
+  forall x : a237,
+  forall b : bag a237,
+  ge (multiplicity x b) (0)%Z.
 
-Parameter empty : forall {a : Type}, forall {_Ga : GospelType a}, bag a.
+Parameter empty : forall {a : Type}, forall {Ih_a : Inhab a}, bag a.
 
 Axiom empty_mult :
-  forall {a189 : Type},
-  forall {_Ga189 : GospelType a189},
-  forall x : a189,
-  Coq.Init.Logic.eq (multiplicity x (@empty a189 _Ga189)) (0)%Z.
+  forall {a240 : Type},
+  forall {Ih_a240 : Inhab a240},
+  forall x : a240,
+  Coq.Init.Logic.eq (multiplicity x (@empty a240 Ih_a240)) (0)%Z.
 
 Parameter init :
   forall {a : Type},
-  forall {_Ga : GospelType a},
+  forall {Ih_a : Inhab a},
   (a -> Coq.Numbers.BinNums.Z) -> bag a.
 
 Axiom init_axiom :
-  forall {a195 : Type},
-  forall {_Ga195 : GospelType a195},
-  forall f : a195 -> Coq.Numbers.BinNums.Z,
-  forall x : a195,
+  forall {a246 : Type},
+  forall {Ih_a246 : Inhab a246},
+  forall f : a246 -> Coq.Numbers.BinNums.Z,
+  forall x : a246,
   Coq.Init.Logic.eq (max (0)%Z (f x)) (multiplicity x (init f)).
+
+Parameter mem :
+  forall {a : Type},
+  forall {Ih_a : Inhab a},
+  a -> bag a -> Prop.
+
+Axiom mem_def :
+  forall {a251 : Type},
+  forall {Ih_a251 : Inhab a251},
+  forall x : a251,
+  forall b : bag a251,
+  Coq.Init.Logic.iff (mem x b) (gt (multiplicity x b) (0)%Z).
 
 Parameter add :
   forall {a : Type},
-  forall {_Ga : GospelType a},
+  forall {Ih_a : Inhab a},
   a -> bag a -> bag a.
 
 Axiom add_mult_x :
-  forall {a201 : Type},
-  forall {_Ga201 : GospelType a201},
-  forall b : bag a201,
-  forall x : a201,
+  forall {a256 : Type},
+  forall {Ih_a256 : Inhab a256},
+  forall b : bag a256,
+  forall x : a256,
   Coq.Init.Logic.eq (multiplicity x (add x b)) (
     plus (1)%Z (multiplicity x b)
   ).
 
 Axiom add_mult_neg_x :
-  forall {a209 : Type},
-  forall {_Ga209 : GospelType a209},
-  forall x : a209,
-  forall y : a209,
-  forall b : bag a209,
+  forall {a264 : Type},
+  forall {Ih_a264 : Inhab a264},
+  forall x : a264,
+  forall y : a264,
+  forall b : bag a264,
   Coq.Init.Logic.not (Coq.Init.Logic.eq x y) ->
   Coq.Init.Logic.eq (multiplicity y (add x b)) (multiplicity y b).
 
-Definition singleton  { a : Type } { _Ga : GospelType a } (x : a) : bag a:=
-add x (@empty a _Ga).
+Parameter singleton :
+  forall {a : Type},
+  forall {Ih_a : Inhab a},
+  a -> bag a.
 
-Definition mem  { a : Type } { _Ga : GospelType a } (x : a) (b : bag a) : Prop:=
-gt (multiplicity x b) (0)%Z.
+Axiom singleton_def :
+  forall {a269 : Type},
+  forall {Ih_a269 : Inhab a269},
+  forall x : a269,
+  Coq.Init.Logic.eq (singleton x) (add x (@empty a269 Ih_a269)).
 
 Parameter remove :
   forall {a : Type},
-  forall {_Ga : GospelType a},
+  forall {Ih_a : Inhab a},
   a -> bag a -> bag a.
 
 Axiom remove_mult_x :
-  forall {a218 : Type},
-  forall {_Ga218 : GospelType a218},
-  forall b : bag a218,
-  forall x : a218,
+  forall {a275 : Type},
+  forall {Ih_a275 : Inhab a275},
+  forall b : bag a275,
+  forall x : a275,
   Coq.Init.Logic.eq (multiplicity x (remove x b)) (
     max (0)%Z (minus (multiplicity x b) (1)%Z)
   ).
 
 Axiom remove_mult_neg_x :
-  forall {a226 : Type},
-  forall {_Ga226 : GospelType a226},
-  forall x : a226,
-  forall y : a226,
-  forall b : bag a226,
+  forall {a283 : Type},
+  forall {Ih_a283 : Inhab a283},
+  forall x : a283,
+  forall y : a283,
+  forall b : bag a283,
   Coq.Init.Logic.not (Coq.Init.Logic.eq x y) ->
   Coq.Init.Logic.eq (multiplicity y (remove x b)) (multiplicity y b).
 
 Parameter union :
   forall {a : Type},
-  forall {_Ga : GospelType a},
+  forall {Ih_a : Inhab a},
   bag a -> bag a -> bag a.
 
 Axiom union_all :
-  forall {a234 : Type},
-  forall {_Ga234 : GospelType a234},
-  forall b : bag a234,
-  forall b' : bag a234,
-  forall x : a234,
+  forall {a291 : Type},
+  forall {Ih_a291 : Inhab a291},
+  forall b : bag a291,
+  forall b' : bag a291,
+  forall x : a291,
   Coq.Init.Logic.eq (max (multiplicity x b) (multiplicity x b')) (
     multiplicity x (union b b')
   ).
 
 Parameter sum :
   forall {a : Type},
-  forall {_Ga : GospelType a},
+  forall {Ih_a : Inhab a},
   bag a -> bag a -> bag a.
 
 Axiom sum_all :
-  forall {a242 : Type},
-  forall {_Ga242 : GospelType a242},
-  forall b : bag a242,
-  forall b' : bag a242,
-  forall x : a242,
+  forall {a299 : Type},
+  forall {Ih_a299 : Inhab a299},
+  forall b : bag a299,
+  forall b' : bag a299,
+  forall x : a299,
   Coq.Init.Logic.eq (plus (multiplicity x b) (multiplicity x b')) (
     multiplicity x (sum b b')
   ).
 
 Parameter inter :
   forall {a : Type},
-  forall {_Ga : GospelType a},
+  forall {Ih_a : Inhab a},
   bag a -> bag a -> bag a.
 
 Axiom inter_all :
-  forall {a250 : Type},
-  forall {_Ga250 : GospelType a250},
-  forall b : bag a250,
-  forall b' : bag a250,
-  forall x : a250,
+  forall {a307 : Type},
+  forall {Ih_a307 : Inhab a307},
+  forall b : bag a307,
+  forall b' : bag a307,
+  forall x : a307,
   Coq.Init.Logic.eq (min (multiplicity x b) (multiplicity x b')) (
     multiplicity x (inter b b')
   ).
 
+Parameter disjoint :
+  forall {a : Type},
+  forall {Ih_a : Inhab a},
+  bag a -> bag a -> Prop.
+
+Axiom disjoint_def :
+  forall {a314 : Type},
+  forall {Ih_a314 : Inhab a314},
+  forall b : bag a314,
+  forall b' : bag a314,
+  Coq.Init.Logic.iff (disjoint b b') (
+    forall x : a314,
+    mem x b -> Coq.Init.Logic.not (mem x b')
+  ).
+
 Parameter diff :
   forall {a : Type},
-  forall {_Ga : GospelType a},
+  forall {Ih_a : Inhab a},
   bag a -> bag a -> bag a.
 
 Axiom diff_all :
-  forall {a258 : Type},
-  forall {_Ga258 : GospelType a258},
-  forall b : bag a258,
-  forall b' : bag a258,
-  forall x : a258,
+  forall {a321 : Type},
+  forall {Ih_a321 : Inhab a321},
+  forall b : bag a321,
+  forall b' : bag a321,
+  forall x : a321,
   Coq.Init.Logic.eq (
     max (0)%Z (minus (multiplicity x b) (multiplicity x b'))
   ) (multiplicity x (diff b b')).
 
-Definition disjoint  { a : Type } { _Ga : GospelType a } (b : bag a) (
-  b' : bag a
-) : Prop:=
-forall x : a,
-mem x b -> Coq.Init.Logic.not (mem x b').
+Parameter subset :
+  forall {a : Type},
+  forall {Ih_a : Inhab a},
+  bag a -> bag a -> Prop.
 
-Definition subset  { a : Type } { _Ga : GospelType a } (b : bag a) (
-  b' : bag a
-) : Prop:=
-forall x : a,
-le (multiplicity x b) (multiplicity x b').
+Axiom subset_def :
+  forall {a328 : Type},
+  forall {Ih_a328 : Inhab a328},
+  forall b : bag a328,
+  forall b' : bag a328,
+  Coq.Init.Logic.iff (subset b b') (
+    forall x : a328,
+    le (multiplicity x b) (multiplicity x b')
+  ).
 
 Parameter filter :
   forall {a : Type},
-  forall {_Ga : GospelType a},
+  forall {Ih_a : Inhab a},
   (a -> Prop) -> bag a -> bag a.
 
 Axiom filter_mem :
-  forall {a272 : Type},
-  forall {_Ga272 : GospelType a272},
-  forall b : bag a272,
-  forall x : a272,
-  forall f : a272 -> bool,
+  forall {a335 : Type},
+  forall {Ih_a335 : Inhab a335},
+  forall b : bag a335,
+  forall x : a335,
+  forall f : a335 -> bool,
   f x ->
   Coq.Init.Logic.eq (multiplicity x (filter f b)) (multiplicity x b).
 
 Axiom filter_mem_neg :
-  forall {a279 : Type},
-  forall {_Ga279 : GospelType a279},
-  forall b : bag a279,
-  forall x : a279,
-  forall f : a279 -> bool,
+  forall {a342 : Type},
+  forall {Ih_a342 : Inhab a342},
+  forall b : bag a342,
+  forall x : a342,
+  forall f : a342 -> bool,
   Coq.Init.Logic.not (f x) ->
   Coq.Init.Logic.eq (multiplicity x (filter f b)) (0)%Z.
 
 Parameter cardinal :
   forall {a : Type},
-  forall {_Ga : GospelType a},
+  forall {Ih_a : Inhab a},
   bag a -> Coq.Numbers.BinNums.Z.
 
-Definition finite  { a : Type } { _Ga : GospelType a } (b : bag a) : Prop:=
-Coq.Init.Logic.ex (
-  fun s : sequence a =>
-  forall x : a,
-  mem x b -> Sequence.mem x s
-).
+Parameter finite :
+  forall {a : Type},
+  forall {Ih_a : Inhab a},
+  bag a -> Prop.
+
+Axiom finite_def :
+  forall {a349 : Type},
+  forall {Ih_a349 : Inhab a349},
+  forall b : bag a349,
+  Coq.Init.Logic.iff (finite b) (
+    Coq.Init.Logic.ex (
+      fun s : sequence a349 =>
+      forall x : a349,
+      mem x b -> Sequence.mem x s
+    )
+  ).
 
 Axiom card_nonneg :
-  forall {a286 : Type},
-  forall {_Ga286 : GospelType a286},
-  forall b : bag a286,
+  forall {a351 : Type},
+  forall {Ih_a351 : Inhab a351},
+  forall b : bag a351,
   ge (cardinal b) (0)%Z.
 
 Axiom card_empty :
-  forall {a288 : Type},
-  forall {_Ga288 : GospelType a288},
-  Coq.Init.Logic.eq (cardinal (@empty a288 _Ga288)) (0)%Z.
+  forall {a353 : Type},
+  forall {Ih_a353 : Inhab a353},
+  Coq.Init.Logic.eq (cardinal (@empty a353 Ih_a353)) (0)%Z.
 
 Axiom card_singleton :
-  forall {a292 : Type},
-  forall {_Ga292 : GospelType a292},
-  forall x : a292,
+  forall {a357 : Type},
+  forall {Ih_a357 : Inhab a357},
+  forall x : a357,
   Coq.Init.Logic.eq (cardinal (singleton x)) (1)%Z.
 
 Axiom card_union :
-  forall {a301 : Type},
-  forall {_Ga301 : GospelType a301},
-  forall b1 : bag a301,
-  forall b2 : bag a301,
+  forall {a366 : Type},
+  forall {Ih_a366 : Inhab a366},
+  forall b1 : bag a366,
+  forall b2 : bag a366,
   finite b1 ->
   finite b2 ->
   Coq.Init.Logic.eq (cardinal (union b1 b2)) (
@@ -680,39 +817,46 @@ Axiom card_union :
   ).
 
 Axiom card_add :
-  forall {a308 : Type},
-  forall {_Ga308 : GospelType a308},
-  forall x : a308,
-  forall b : bag a308,
+  forall {a373 : Type},
+  forall {Ih_a373 : Inhab a373},
+  forall x : a373,
+  forall b : bag a373,
   finite b ->
   Coq.Init.Logic.eq (cardinal (add x b)) (plus (cardinal b) (1)%Z).
 
 Axiom card_map :
-  forall {a315 : Type},
-  forall {_Ga315 : GospelType a315},
-  forall f : a315 -> bool,
-  forall b : bag a315,
+  forall {a380 : Type},
+  forall {Ih_a380 : Inhab a380},
+  forall f : a380 -> bool,
+  forall b : bag a380,
   finite b -> le (cardinal (filter f b)) (cardinal b).
 
 Parameter of_seq :
   forall {a : Type},
-  forall {_Ga : GospelType a},
+  forall {Ih_a : Inhab a},
   sequence a -> bag a.
 
 Axiom of_seq_multiplicity :
-  forall {a320 : Type},
-  forall {_Ga320 : GospelType a320},
-  forall s : sequence a320,
-  forall x : a320,
+  forall {a385 : Type},
+  forall {Ih_a385 : Inhab a385},
+  forall s : sequence a385,
+  forall x : a385,
   Coq.Init.Logic.eq (Sequence.multiplicity x s) (
     multiplicity x (of_seq s)
   ).
+
+Parameter fold :
+  forall {a : Type},
+  forall {b : Type},
+  forall {Ih_a : Inhab a},
+  forall {Ih_b : Inhab b},
+  (a -> b -> b) -> bag a -> b -> b.
 
 End Bag.
 
 Parameter set_create :
   forall {a : Type},
-  forall {_Ga : GospelType a},
+  forall {Ih_a : Inhab a},
   set a.
 
 Module _Set.
@@ -721,172 +865,218 @@ Parameter t : Type -> Type.
 
 Parameter _Set :
   forall {a : Type},
-  forall {_Ga : OCamlType a},
+  forall {Ih_a : Inhab a},
+  forall {Enc_a : Enc a},
   t a -> t a -> CFML.SepBase.SepBasicSetup.SepSimplArgsCredits.hprop.
+
+Parameter empty : forall {a : Type}, forall {Ih_a : Inhab a}, set a.
 
 Parameter mem :
   forall {a : Type},
-  forall {_Ga : GospelType a},
+  forall {Ih_a : Inhab a},
   a -> set a -> Prop.
 
-Parameter empty : forall {a : Type}, forall {_Ga : GospelType a}, set a.
-
 Axiom empty_mem :
-  forall {a324 : Type},
-  forall {_Ga324 : GospelType a324},
-  forall x : a324,
-  Coq.Init.Logic.not (mem x (@empty a324 _Ga324)).
+  forall {a389 : Type},
+  forall {Ih_a389 : Inhab a389},
+  forall x : a389,
+  Coq.Init.Logic.not (mem x (@empty a389 Ih_a389)).
 
 Parameter add :
   forall {a : Type},
-  forall {_Ga : GospelType a},
+  forall {Ih_a : Inhab a},
   a -> set a -> set a.
 
 Axiom add_mem :
-  forall {a328 : Type},
-  forall {_Ga328 : GospelType a328},
-  forall s : set a328,
-  forall x : a328,
+  forall {a393 : Type},
+  forall {Ih_a393 : Inhab a393},
+  forall s : set a393,
+  forall x : a393,
   mem x (add x s).
 
 Axiom add_mem_neq :
-  forall {a335 : Type},
-  forall {_Ga335 : GospelType a335},
-  forall s : set a335,
-  forall x : a335,
-  forall y : a335,
+  forall {a400 : Type},
+  forall {Ih_a400 : Inhab a400},
+  forall s : set a400,
+  forall x : a400,
+  forall y : a400,
   Coq.Init.Logic.not (Coq.Init.Logic.eq x y) ->
   Coq.Init.Logic.iff (mem x s) (mem x (add y s)).
 
-Definition singleton  { a : Type } { _Ga : GospelType a } (x : a) : set a:=
-add x (@empty a _Ga).
+Parameter singleton :
+  forall {a : Type},
+  forall {Ih_a : Inhab a},
+  a -> set a.
 
 Parameter remove :
   forall {a : Type},
-  forall {_Ga : GospelType a},
+  forall {Ih_a : Inhab a},
   a -> set a -> set a.
 
 Axiom remove_mem :
-  forall {a341 : Type},
-  forall {_Ga341 : GospelType a341},
-  forall s : set a341,
-  forall x : a341,
+  forall {a404 : Type},
+  forall {Ih_a404 : Inhab a404},
+  forall s : set a404,
+  forall x : a404,
   Coq.Init.Logic.not (mem x (remove x s)).
 
 Axiom remove_mem_neq :
-  forall {a348 : Type},
-  forall {_Ga348 : GospelType a348},
-  forall s : set a348,
-  forall x : a348,
-  forall y : a348,
+  forall {a411 : Type},
+  forall {Ih_a411 : Inhab a411},
+  forall s : set a411,
+  forall x : a411,
+  forall y : a411,
   Coq.Init.Logic.not (Coq.Init.Logic.eq x y) ->
   Coq.Init.Logic.iff (mem x s) (mem x (remove y s)).
 
 Parameter union :
   forall {a : Type},
-  forall {_Ga : GospelType a},
+  forall {Ih_a : Inhab a},
   set a -> set a -> set a.
 
 Axiom union_mem :
-  forall {a355 : Type},
-  forall {_Ga355 : GospelType a355},
-  forall s : set a355,
-  forall s' : set a355,
-  forall x : a355,
+  forall {a418 : Type},
+  forall {Ih_a418 : Inhab a418},
+  forall s : set a418,
+  forall s' : set a418,
+  forall x : a418,
   Coq.Init.Logic.or (mem x s) (mem x s') -> mem x (union s s').
 
 Axiom union_mem_neg :
-  forall {a362 : Type},
-  forall {_Ga362 : GospelType a362},
-  forall s : set a362,
-  forall s' : set a362,
-  forall x : a362,
+  forall {a425 : Type},
+  forall {Ih_a425 : Inhab a425},
+  forall s : set a425,
+  forall s' : set a425,
+  forall x : a425,
   Coq.Init.Logic.not (mem x s) ->
   Coq.Init.Logic.not (mem x s') -> Coq.Init.Logic.not (mem x (union s s')).
 
 Parameter inter :
   forall {a : Type},
-  forall {_Ga : GospelType a},
+  forall {Ih_a : Inhab a},
   set a -> set a -> set a.
 
 Axiom inter_mem :
-  forall {a369 : Type},
-  forall {_Ga369 : GospelType a369},
-  forall s : set a369,
-  forall s' : set a369,
-  forall x : a369,
+  forall {a432 : Type},
+  forall {Ih_a432 : Inhab a432},
+  forall s : set a432,
+  forall s' : set a432,
+  forall x : a432,
   mem x s -> mem x s' -> mem x (inter s s').
 
 Axiom inter_mem_neq :
-  forall {a376 : Type},
-  forall {_Ga376 : GospelType a376},
-  forall s : set a376,
-  forall s' : set a376,
-  forall x : a376,
+  forall {a439 : Type},
+  forall {Ih_a439 : Inhab a439},
+  forall s : set a439,
+  forall s' : set a439,
+  forall x : a439,
   Coq.Init.Logic.not (Coq.Init.Logic.or (mem x s) (mem x s')) ->
   Coq.Init.Logic.not (mem x (inter s s')).
 
-Definition disjoint  { a : Type } { _Ga : GospelType a } (s : set a) (
-  s' : set a
-) : Prop:=
-Coq.Init.Logic.eq (inter s s') (@empty a _Ga).
+Parameter disjoint :
+  forall {a : Type},
+  forall {Ih_a : Inhab a},
+  set a -> set a -> Prop.
+
+Axiom disjoint_def :
+  forall {a443 : Type},
+  forall {Ih_a443 : Inhab a443},
+  forall s : set a443,
+  forall s' : set a443,
+  Coq.Init.Logic.iff (disjoint s s') (
+    Coq.Init.Logic.eq (inter s s') (@empty a443 Ih_a443)
+  ).
 
 Parameter diff :
   forall {a : Type},
-  forall {_Ga : GospelType a},
+  forall {Ih_a : Inhab a},
   set a -> set a -> set a.
 
 Axiom diff_mem :
-  forall {a385 : Type},
-  forall {_Ga385 : GospelType a385},
-  forall s : set a385,
-  forall s' : set a385,
-  forall x : a385,
+  forall {a451 : Type},
+  forall {Ih_a451 : Inhab a451},
+  forall s : set a451,
+  forall s' : set a451,
+  forall x : a451,
   mem x s' -> Coq.Init.Logic.not (mem x (diff s s')).
 
 Axiom diff_mem_fst :
-  forall {a392 : Type},
-  forall {_Ga392 : GospelType a392},
-  forall s : set a392,
-  forall s' : set a392,
-  forall x : a392,
+  forall {a458 : Type},
+  forall {Ih_a458 : Inhab a458},
+  forall s : set a458,
+  forall s' : set a458,
+  forall x : a458,
   Coq.Init.Logic.not (mem x s') ->
   Coq.Init.Logic.iff (mem x s) (mem x (diff s s')).
 
-Definition subset  { a : Type } { _Ga : GospelType a } (s : set a) (
-  s' : set a
-) : Prop:=
-forall x : a,
-mem x s -> mem x s'.
+Parameter subset :
+  forall {a : Type},
+  forall {Ih_a : Inhab a},
+  set a -> set a -> Prop.
+
+Axiom subset_def :
+  forall {a464 : Type},
+  forall {Ih_a464 : Inhab a464},
+  forall s : set a464,
+  forall s' : set a464,
+  Coq.Init.Logic.iff (subset s s') (forall x : a464, mem x s -> mem x s').
 
 Parameter map :
   forall {a : Type},
   forall {b : Type},
-  forall {_Ga : GospelType a},
-  forall {_Gb : GospelType b},
+  forall {Ih_a : Inhab a},
+  forall {Ih_b : Inhab b},
   (a -> b) -> set a -> set b.
 
 Axiom set_map :
-  forall {a404 : Type},
-  forall {a405 : Type},
-  forall {_Ga404 : GospelType a404},
-  forall {_Ga405 : GospelType a405},
-  forall f : a405 -> a404,
-  forall s : set a405,
-  forall x : a404,
+  forall {a473 : Type},
+  forall {a474 : Type},
+  forall {Ih_a473 : Inhab a473},
+  forall {Ih_a474 : Inhab a474},
+  forall f : a474 -> a473,
+  forall s : set a474,
+  forall x : a473,
   Coq.Init.Logic.iff (mem x (map f s)) (
     Coq.Init.Logic.ex (
-      fun y : a405 =>
+      fun y : a474 =>
       Coq.Init.Logic.and (Coq.Init.Logic.eq (f y) x) (mem y s)
     )
   ).
 
+Parameter partition :
+  forall {a : Type},
+  forall {Ih_a : Inhab a},
+  (a -> Prop) -> set a -> (set a) * (set a).
+
+Axiom partition_l_mem :
+  forall {a486 : Type},
+  forall {Ih_a486 : Inhab a486},
+  forall f : a486 -> bool,
+  forall s : set a486,
+  forall x : a486,
+  forall p1 : set a486,
+  forall p2 : set a486,
+  mem x s ->
+  f x -> Coq.Init.Logic.eq (partition f s) (p1, p2) -> mem x p1.
+
+Axiom partition_r_mem :
+  forall {a498 : Type},
+  forall {Ih_a498 : Inhab a498},
+  forall f : a498 -> bool,
+  forall s : set a498,
+  forall x : a498,
+  forall p1 : set a498,
+  forall p2 : set a498,
+  mem x s ->
+  Coq.Init.Logic.not (f x) ->
+  Coq.Init.Logic.eq (partition f s) (p1, p2) -> mem x p2.
+
 Parameter cardinal :
   forall {a : Type},
-  forall {_Ga : GospelType a},
+  forall {Ih_a : Inhab a},
   set a -> Coq.Numbers.BinNums.Z.
 
-Definition finite  { a : Type } { _Ga : GospelType a } (s : set a) : Prop:=
+Definition finite  { a : Type } { Ih_a : Inhab a } (s : set a) : Prop:=
 Coq.Init.Logic.ex (
   fun seq : sequence a =>
   forall x : a,
@@ -894,21 +1084,21 @@ Coq.Init.Logic.ex (
 ).
 
 Axiom cardinal_nonneg :
-  forall {a411 : Type},
-  forall {_Ga411 : GospelType a411},
-  forall s : set a411,
+  forall {a504 : Type},
+  forall {Ih_a504 : Inhab a504},
+  forall s : set a504,
   ge (cardinal s) (0)%Z.
 
 Axiom cardinal_empty :
-  forall {a413 : Type},
-  forall {_Ga413 : GospelType a413},
-  Coq.Init.Logic.eq (cardinal (@empty a413 _Ga413)) (0)%Z.
+  forall {a506 : Type},
+  forall {Ih_a506 : Inhab a506},
+  Coq.Init.Logic.eq (cardinal (@empty a506 Ih_a506)) (0)%Z.
 
 Axiom cardinal_remove :
-  forall {a425 : Type},
-  forall {_Ga425 : GospelType a425},
-  forall s : set a425,
-  forall x : a425,
+  forall {a518 : Type},
+  forall {Ih_a518 : Inhab a518},
+  forall s : set a518,
+  forall x : a518,
   finite s ->
   (
     if classicT (mem x s) then
@@ -918,10 +1108,10 @@ Axiom cardinal_remove :
   ).
 
 Axiom cardinal_add :
-  forall {a437 : Type},
-  forall {_Ga437 : GospelType a437},
-  forall s : set a437,
-  forall x : a437,
+  forall {a530 : Type},
+  forall {Ih_a530 : Inhab a530},
+  forall s : set a530,
+  forall x : a530,
   finite s ->
   (
     if classicT (mem x s) then
@@ -932,24 +1122,37 @@ Axiom cardinal_add :
 
 Parameter of_seq :
   forall {a : Type},
-  forall {_Ga : GospelType a},
+  forall {Ih_a : Inhab a},
   sequence a -> set a.
-
-Axiom of_seq_set :
-  forall {a443 : Type},
-  forall {_Ga443 : GospelType a443},
-  forall x : a443,
-  forall s : sequence a443,
-  Coq.Init.Logic.iff (Sequence.mem x s) (mem x (of_seq s)).
 
 Parameter fold :
   forall {a : Type},
   forall {b : Type},
-  forall {_Ga : GospelType a},
-  forall {_Gb : GospelType b},
+  forall {Ih_a : Inhab a},
+  forall {Ih_b : Inhab b},
   (a -> b -> b) -> set a -> b -> b.
 
 End _Set.
+
+Parameter map_set :
+  forall {a : Type},
+  forall {b : Type},
+  forall {Ih_a : Inhab a},
+  forall {Ih_b : Inhab b},
+  (a -> b) -> a -> b -> a -> b.
+
+Axiom map_set_def :
+  forall {a : Type},
+  forall {b : Type},
+  forall {Ih_a : Inhab a},
+  forall {Ih_b : Inhab b},
+  forall f : a -> b,
+  forall x : a,
+  forall y : b,
+  Coq.Init.Logic.eq (map_set f x y) (
+    fun arg : a =>
+    if classicT (Coq.Init.Logic.eq arg x) then y else f x
+  ).
 
 Module Map.
 
@@ -958,25 +1161,27 @@ Parameter t : Type -> Type -> Type.
 Parameter Map :
   forall {a : Type},
   forall {b : Type},
-  forall {_Ga : OCamlType a},
-  forall {_Gb : OCamlType b},
+  forall {Ih_a : Inhab a},
+  forall {Enc_a : Enc a},
+  forall {Ih_b : Inhab b},
+  forall {Enc_b : Enc b},
   t a b -> t a b -> CFML.SepBase.SepBasicSetup.SepSimplArgsCredits.hprop.
 
 Parameter domain :
   forall {a : Type},
   forall {b : Type},
-  forall {_Ga : GospelType a},
-  forall {_Gb : GospelType b},
+  forall {Ih_a : Inhab a},
+  forall {Ih_b : Inhab b},
   b -> (a -> b) -> set a.
 
 Axiom domain_mem :
-  forall {a450 : Type},
-  forall {a451 : Type},
-  forall {_Ga450 : GospelType a450},
-  forall {_Ga451 : GospelType a451},
-  forall x : a451,
-  forall m : a451 -> a450,
-  forall default : a450,
+  forall {a545 : Type},
+  forall {a546 : Type},
+  forall {Ih_a545 : Inhab a545},
+  forall {Ih_a546 : Inhab a546},
+  forall x : a546,
+  forall m : a546 -> a545,
+  forall default : a545,
   Coq.Init.Logic.not (Coq.Init.Logic.eq (m x) default) ->
   _Set.mem x (domain default m).
 
@@ -986,27 +1191,27 @@ Module Array.
 
 Parameter get :
   forall {a : Type},
-  forall {_Ga : GospelType a},
+  forall {Ih_a : Inhab a},
   array a -> Coq.Numbers.BinNums.Z -> a.
 
 Parameter length :
   forall {a : Type},
-  forall {_Ga : GospelType a},
+  forall {Ih_a : Inhab a},
   array a -> Coq.Numbers.BinNums.Z.
 
 Parameter to_seq :
   forall {a : Type},
-  forall {_Ga : GospelType a},
+  forall {Ih_a : Inhab a},
   array a -> sequence a.
 
 Parameter permut :
   forall {a : Type},
-  forall {_Ga : GospelType a},
+  forall {Ih_a : Inhab a},
   array a -> array a -> Prop.
 
 Parameter permut_sub :
   forall {a : Type},
-  forall {_Ga : GospelType a},
+  forall {Ih_a : Inhab a},
   array a ->
   array a -> Coq.Numbers.BinNums.Z -> Coq.Numbers.BinNums.Z -> Prop.
 
@@ -1017,35 +1222,35 @@ Module List.
 Parameter fold_left :
   forall {a : Type},
   forall {b : Type},
-  forall {_Ga : GospelType a},
-  forall {_Gb : GospelType b},
+  forall {Ih_a : Inhab a},
+  forall {Ih_b : Inhab b},
   (b -> a -> b) -> b -> list a -> b.
 
 Parameter _exists :
   forall {a : Type},
-  forall {_Ga : GospelType a},
+  forall {Ih_a : Inhab a},
   (a -> Prop) -> list a -> Prop.
 
 Parameter length :
   forall {a : Type},
-  forall {_Ga : GospelType a},
+  forall {Ih_a : Inhab a},
   list a -> Coq.Numbers.BinNums.Z.
 
 Parameter nth :
   forall {a : Type},
-  forall {_Ga : GospelType a},
+  forall {Ih_a : Inhab a},
   list a -> Coq.Numbers.BinNums.Z -> a.
 
 Parameter mem :
   forall {a : Type},
-  forall {_Ga : GospelType a},
+  forall {Ih_a : Inhab a},
   a -> list a -> Prop.
 
 Parameter map :
   forall {a : Type},
   forall {b : Type},
-  forall {_Ga : GospelType a},
-  forall {_Gb : GospelType b},
+  forall {Ih_a : Inhab a},
+  forall {Ih_b : Inhab b},
   (a -> b) -> list a -> list b.
 
 End List.
@@ -1054,7 +1259,7 @@ Module Order.
 
 Parameter is_pre_order :
   forall {a : Type},
-  forall {_Ga : GospelType a},
+  forall {Ih_a : Inhab a},
   (a -> a -> int) -> Prop.
 
 End Order.
@@ -1063,18 +1268,17 @@ Parameter ref : Type -> Type.
 
 Parameter Ref :
   forall {a : Type},
-  forall {_Ga : OCamlType a},
+  forall {Ih_a : Inhab a},
+  forall {Enc_a : Enc a},
   ref a -> ref a -> CFML.SepBase.SepBasicSetup.SepSimplArgsCredits.hprop.
 
 Parameter _UNUSED :
   forall {a : Type},
-  forall {_Ga : GospelType a},
+  forall {Ih_a : Inhab a},
   ref a -> a.
 
 Parameter logand :
   Coq.Numbers.BinNums.Z -> Coq.Numbers.BinNums.Z -> Coq.Numbers.BinNums.Z.
-
-Parameter integer_of_int : int -> Coq.Numbers.BinNums.Z.
 
 End Stdlib.
 
