@@ -16,10 +16,13 @@ Require gospelstdlib_mli.
 
 Module Stdlib.
 
+  Definition Int (n : int) (n : int) := \[n = n].
+  Definition Bool (p : Prop) (b : bool) := \[p <-> b = true].
+  Definition Option {A} (x : option A) (y : option A) := \[x = y].
   Module Gospelstdlib : gospelstdlib_mli.Stdlib.
 
     Definition sequence A := list A.
-
+    
     Parameter Sequence :
       forall a : Type,
       forall {Ih_a : Inhab a},
@@ -626,8 +629,8 @@ Module Stdlib.
           intros i x H1;
           rew_listx in H1.
         + math.
-        + rew_listx.
-          simpl. destruct i; rew_listx; auto.
+        + simpl. rew_listx.
+          destruct i; rew_listx; auto.
           rewrite Ih; math.
       Qed.
         
@@ -897,8 +900,8 @@ Module Stdlib.
       Lemma well_formed :
         forall a173 : Type,
         forall {a173Ih : Inhab a173},
-        forall x : a173,          
         forall b : bag a173,
+        forall x : a173,          
           ge (multiplicity x b) (0)%Z.
       Proof.
         intros A Ih b x.
@@ -1547,6 +1550,21 @@ Module Stdlib.
                 mem x s -> Sequence.mem x seq
           ).
 
+      Lemma finite_def :
+        forall {a504 : Type},
+        forall {Ih_a504 : Inhab a504},
+        forall s : set a504,
+          Coq.Init.Logic.iff (finite s) (
+              Coq.Init.Logic.ex (
+                  fun seq : sequence a504 =>
+                    forall x : a504,
+                      mem x s -> Sequence.mem x seq
+                )
+            ).
+      Proof.
+        tauto.
+      Qed.
+      
       Lemma finite_trans :
         forall A {AIh : Inhab A} (s : set A),
           finite s -> LibSet.finite s.
@@ -1840,4 +1858,12 @@ Module Stdlib.
       Parameter word_size : int.
     End Sys.
   End Gospelstdlib.
+
+  Module Sys.
+    Parameter word_size : int.
+  End Sys.
+
+  Parameter _Inhab_seq : forall A, Inhab (Gospelstdlib.sequence A).
+  Instance Inhab_seq : forall A, Inhab (Gospelstdlib.sequence A) := _Inhab_seq.
+  
 End Stdlib.
