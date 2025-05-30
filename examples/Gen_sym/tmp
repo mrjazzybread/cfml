@@ -1,0 +1,6 @@
+type name = int
+type t = { run : 'a. (name -> 'a) -> 'a }
+
+let create () = { run = (fun k -> k 0) }
+let next (gen : t) : t = { run = (fun k -> gen.run (fun x -> k (x + 1))) }
+let run gen (k : name -> 'a) : 'a = gen.run k
