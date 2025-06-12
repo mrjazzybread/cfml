@@ -1,92 +1,54 @@
-(* Set Implicit Arguments. *)
+Set Implicit Arguments.
 
-(* Require Import gospelstdlib_verified. *)
+Require Import Gospelstdlib_verified.
 
-(* Require Coq.ZArith.BinInt TLC.LibLogic TLC.LibRelation TLC.LibInt TLC.LibListZ. *)
+Import Gospelstdlib.
 
-(* Require Import CFML.SepBase CFML.SepLifted CFML.WPLib CFML.WPLifted CFML.WPRecord CFML.WPArray CFML.WPBuiltin. *)
+Require Coq.ZArith.BinInt TLC.LibLogic TLC.LibRelation TLC.LibInt TLC.LibListZ.
 
-(* Require CFML.Stdlib.Array_ml CFML.Stdlib.List_ml CFML.Stdlib.Sys_ml. *)
+Require Import CFML.SepBase CFML.SepLifted CFML.WPLib CFML.WPLifted CFML.WPRecord CFML.WPArray CFML.WPBuiltin.
 
-(* Require Import Coq.ZArith.BinIntDef CFML.Semantics CFML.WPHeader. *)
+Require CFML.Stdlib.Array_ml CFML.Stdlib.List_ml CFML.Stdlib.Sys_ml.
 
-(* Delimit Scope Z_scope with Z. *)
+Require Import Coq.ZArith.BinIntDef CFML.Semantics CFML.WPHeader.
 
-(* Parameter nam : Type. *)
+Delimit Scope Z_scope with Z.
 
-(* Parameter Nam : *)
-(*   name -> nam -> CFML.SepBase.SepBasicSetup.SepSimplArgsCredits.hprop. *)
+Parameter name : Type.
 
-(* Parameter T : *)
-(*   Sett name -> loc -> CFML.SepBase.SepBasicSetup.SepSimplArgsCredits.hprop. *)
+Instance __Inhab_name : Inhab name. Admitted.
 
-(* Parameter _create : CFML.Semantics.val. *)
+Instance __Enc_name : Enc name. Admitted.
 
-(* Parameter _create_spec : *)
-(*   forall {a : Type}, *)
-(*   forall {Ih_a : Inhab a}, *)
-(*   forall {Enc_a : Enc a}, *)
-(*   CFML.SepLifted.Triple ( *)
-(*     CFML.SepLifted.Trm_apps _create Coq.Lists.List.nil *)
-(*   ) CFML.SepBase.SepBasicSetup.SepSimplArgsCredits.hempty ( *)
-(*     fun _res_ : Sett name => *)
-(*     let '(g) := _res_ in *)
-(*     CFML.SepBase.SepBasicSetup.SepSimplArgsCredits.hpure ( *)
-(*       @infix = (set name) a g Setempty *)
-(*     ) *)
-(*   ). *)
+Parameter Name : name -> name -> hprop.
 
-(* Parameter _next : CFML.Semantics.val. *)
+Parameter Gen : _Set.t name -> loc -> hprop.
 
-(* Parameter _next_spec : *)
-(*   forall {c : Type}, *)
-(*   forall {a : Type}, *)
-(*   forall {b : Type}, *)
-(*   forall {Ih_c : Inhab c}, *)
-(*   forall {Enc_c : Enc c}, *)
-(*   forall {Ih_a : Inhab a}, *)
-(*   forall {Enc_a : Enc a}, *)
-(*   forall {Ih_b : Inhab b}, *)
-(*   forall {Enc_b : Enc b}, *)
-(*   forall g : Sett name, *)
-(*   CFML.SepLifted.Triple ( *)
-(*     CFML.SepLifted.Trm_apps _next ( *)
-(*       Coq.Lists.List.cons (@CFML.SepLifted.dyn_make (Sett name) _ g) Coq.Lists.List.nil *)
-(*     ) *)
-(*   ) CFML.SepBase.SepBasicSetup.SepSimplArgsCredits.hempty ( *)
-(*     fun _res_ : name => *)
-(*     let '(n) := _res_ in *)
-(*     CFML.SepBase.SepBasicSetup.SepSimplArgsCredits.hstar ( *)
-(*       CFML.SepBase.SepBasicSetup.SepSimplArgsCredits.hpure ( *)
-(*         @Setmem name c n g *)
-(*       ) *)
-(*     ) ( *)
-(*       CFML.SepBase.SepBasicSetup.SepSimplArgsCredits.hstar ( *)
-(*         CFML.SepBase.SepBasicSetup.SepSimplArgsCredits.hpure ( *)
-(*           not (@Setmem name b n g) *)
-(*         ) *)
-(*       ) ( *)
-(*         CFML.SepBase.SepBasicSetup.SepSimplArgsCredits.hpure ( *)
-(*           @Setsubset name a g g *)
-(*         ) *)
-(*       ) *)
-(*     ) *)
-(*   ). *)
+Parameter _create : val.
 
-(* Parameter _reset : CFML.Semantics.val. *)
+Parameter _create_spec :
+  SPEC(_create tt)
+  PRE\[]
+  POST(fun _prog_g : loc => (_prog_g ~> Gen _Set.empty)).
 
-(* Parameter _reset_spec : *)
-(*   forall {a : Type}, *)
-(*   forall {Ih_a : Inhab a}, *)
-(*   forall {Enc_a : Enc a}, *)
-(*   forall g : Sett name, *)
-(*   CFML.SepLifted.Triple ( *)
-(*     CFML.SepLifted.Trm_apps _reset ( *)
-(*       Coq.Lists.List.cons (@CFML.SepLifted.dyn_make (Sett name) _ g) Coq.Lists.List.nil *)
-(*     ) *)
-(*   ) CFML.SepBase.SepBasicSetup.SepSimplArgsCredits.hempty ( *)
-(*     fun _res_ : Coq.Init.Datatypes.unit => *)
-(*     CFML.SepBase.SepBasicSetup.SepSimplArgsCredits.hpure ( *)
-(*       @infix = (set name) a g Setempty *)
-(*     ) *)
-(*   ). *)
+Parameter _next : val.
+
+Parameter _next_spec :
+  forall _prog_g : loc,
+  forall g : _Set.t name,
+  SPEC(_next _prog_g)
+  PRE((_prog_g ~> Gen g))
+  POST(
+    fun _prog_n : name =>
+    \exists n : name,
+    ((_prog_g ~> Gen (_Set.add n g)) \* (_prog_n ~> Name n))
+  ).
+
+Parameter _reset : val.
+
+Parameter _reset_spec :
+  forall _prog_g : loc,
+  forall g : _Set.t name,
+  SPEC(_reset _prog_g)
+  PRE((_prog_g ~> Gen g))
+  POST(fun _ : unit => (_prog_g ~> Gen _Set.empty)).

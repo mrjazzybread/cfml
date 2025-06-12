@@ -1,5 +1,5 @@
 type name = int
-type t = name ref
+type gen = name ref
 
 let initial = 0
 let create () = ref initial
@@ -10,4 +10,3 @@ let next x =
   !x
 
 let reset x = x := initial
-let get x = !x
