@@ -33,7 +33,7 @@ Lemma initial_spec : initial = 0.
 Proof. xcf. Qed.
 
 Lemma _create_spec :
-  SPEC(_create tt)
+  SPEC(_create v)
   PRE\[]
   POST(fun _prog_g : loc => (_prog_g ~> Gen _Set.empty)).
 Proof using.
