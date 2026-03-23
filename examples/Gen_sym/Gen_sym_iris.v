@@ -41,6 +41,14 @@ Definition Gen' (v : val) (s : coGset Z) : Prop :=
 Definition Gen (r : val) (s : coGset Z) : iProp :=
   ∃ (ℓ : loc) (v : val), ℓ ↦ v ∗ ⌜Gen' v s⌝ ∗ ⌜r = #ℓ⌝.
 
+Parameter map : val.
+
+(* Lemma epic : forall (P : iProp) (Q : iProp) (f : val) *)
+(*          (arg : val) (opt : val), *)
+(*   {{{ {{{ P }}} f arg {{{ RET #(); Q }}} ∗ P }}} *)
+(*   iter f opt *)
+(*   {{{ RET v; If opt = NONEV then P else Q v }}}. *)
+
 Lemma create_spec :
   {{{ True }}}
     create #()
@@ -108,4 +116,4 @@ Proof.
     2: apply not_elem_of_singleton.
     all: lia.
 Qed.
-End.
+End spec.
