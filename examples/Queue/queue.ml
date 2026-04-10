@@ -24,3 +24,15 @@ type 'a t = {
 }
 
 let create () = { length = 0; first = Nil; last = Nil }
+
+let add x q =
+  let cell = Cons { content = x; next = Nil } in
+  match q.last with
+  | Nil ->
+      q.length <- 1;
+      q.first <- cell;
+      q.last <- cell
+  | Cons last ->
+      q.length <- q.length + 1;
+      last.next <- cell;
+      q.last <- cell

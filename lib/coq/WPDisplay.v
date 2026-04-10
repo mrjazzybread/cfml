@@ -214,11 +214,6 @@ Notation "'Assert' F" :=
  (in custom cf at level 69,
   F custom cf at level 99) : cf_scope.
 
-Notation "'Val' v" :=
- ((*Wptag*) (Wpgen_val v))
- (in custom cf at level 69,
-  v constr) : cf_scope.
-
 Notation "'Let' x ':=' F1 'in' F2" :=
  ((*Wptag*) (Wpgen_let_trm F1 (fun x => F2)))
  (in custom cf at level 69,

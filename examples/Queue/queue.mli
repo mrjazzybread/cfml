@@ -27,10 +27,13 @@ type !'a t
 (** The type of queues containing elements of type ['a]. *)
 (*@ model : val sequence *)
 
-exception Empty
-(** Raised when {!Queue.take} or {!Queue.peek} is applied to an empty queue. *)
-
 val create : unit -> 'a t
 (** Return a new queue, initially empty. *)
 (*@ q = create ()
     ensures q = [] *)
+
+val add : 'a -> 'a t -> unit
+(** [add x q] adds the element [x] at the end of the queue [q]. *)
+(*@ add x q
+    modifies q
+    ensures q = snoc (old q) x *)
